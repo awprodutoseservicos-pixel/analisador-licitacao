@@ -3,318 +3,217 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Analisador de Licitações</title>
+<title>LICIT.AI — Analisador Universal</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-  :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --border: #1f2d45;
-    --accent: #00d4aa;
-    --accent2: #3b82f6;
-    --warn: #f59e0b;
-    --danger: #ef4444;
-    --success: #10b981;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --mono: 'Space Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    min-height: 100vh;
-  }
-  /* Header */
-  .header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 32px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .logo {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-  .header-sub { color: var(--muted); font-size: 12px; margin-left: auto; }
+:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1f2d45;--accent:#00d4aa;--accent2:#3b82f6;--warn:#f59e0b;--danger:#ef4444;--success:#10b981;--text:#e2e8f0;--muted:#64748b;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
+.logo{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:2px}
+.badge-v{background:rgba(0,212,170,.15);color:var(--accent);border:1px solid rgba(0,212,170,.3);border-radius:12px;padding:2px 10px;font-size:10px;font-weight:600;letter-spacing:1px}
+.header-right{margin-left:auto;font-size:11px;color:var(--muted)}
+.main{max-width:1360px;margin:0 auto;padding:28px 32px}
 
-  /* Main */
-  .main { max-width: 1200px; margin: 0 auto; padding: 32px; }
+/* Upload */
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--surface);margin-bottom:16px}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(0,212,170,.04)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.upload-zone.done{border-color:var(--success);background:rgba(16,185,129,.05)}
 
-  /* Upload zone */
-  .upload-zone {
-    border: 2px dashed var(--border);
-    border-radius: 12px;
-    padding: 48px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .2s;
-    position: relative;
-    background: var(--surface);
-    margin-bottom: 24px;
-  }
-  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(0,212,170,.05); }
-  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
-  .upload-icon { font-size: 32px; margin-bottom: 12px; }
-  .upload-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
-  .upload-sub { color: var(--muted); font-size: 13px; }
+/* Organ bar */
+.organ-bar{background:var(--surface);border:1px solid rgba(0,212,170,.25);border-radius:10px;padding:14px 24px;margin-bottom:20px;display:none;gap:0;flex-wrap:wrap;align-items:stretch}
+.organ-bar.show{display:flex}
+.organ-field{display:flex;flex-direction:column;gap:3px;padding:0 24px;border-right:1px solid var(--border)}
+.organ-field:first-child{padding-left:0}
+.organ-field:last-child{border-right:none}
+.organ-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.organ-value{font-size:13px;font-weight:500;color:var(--accent)}
 
-  /* Stats */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-  .stat {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-  }
-  .stat-label { color: var(--muted); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-  .stat-value { font-family: var(--mono); font-size: 24px; font-weight: 700; }
-  .stat-value.green { color: var(--success); }
-  .stat-value.yellow { color: var(--warn); }
-  .stat-value.red { color: var(--danger); }
-  .stat-value.blue { color: var(--accent2); }
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+.stat-label{color:var(--muted);font-size:10px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px}
+.stat-value{font-family:var(--mono);font-size:24px;font-weight:700}
+.c-green{color:var(--success)}.c-yellow{color:var(--warn)}.c-red{color:var(--danger)}.c-blue{color:var(--accent2)}.c-teal{color:var(--accent)}
 
-  /* Controls */
-  .controls {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .filter-btn {
-    padding: 7px 16px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 12px;
-    font-family: var(--sans);
-    transition: all .15s;
-  }
-  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
-  .filter-btn.warn.active { background: var(--warn); border-color: var(--warn); color: #000; }
-  .filter-btn.danger.active { background: var(--danger); border-color: var(--danger); color: #fff; }
+/* Progress */
+.progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;display:none}
+.progress-wrap.show{display:block}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.progress-label{font-size:12px;color:var(--muted)}
+.progress-pct{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.progress-track{background:var(--surface2);border-radius:4px;height:5px;overflow:hidden}
+.progress-fill{background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;border-radius:4px;transition:width .4s}
+.progress-item{font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-  .btn {
-    padding: 8px 20px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 13px;
-    font-family: var(--sans);
-    font-weight: 500;
-    transition: all .15s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .btn-primary { background: var(--accent); color: #000; margin-left: auto; }
-  .btn-primary:hover { background: #00f0c0; }
-  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--accent2); }
-  .btn:disabled { opacity: .4; cursor: not-allowed; }
+/* Controls */
+.controls{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-size:12px;font-family:var(--sans);transition:all .15s}
+.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
+.filter-btn.aw.active{background:var(--warn);border-color:var(--warn);color:#000}
+.filter-btn.ad.active{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{background:#00f0c0}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
 
-  /* Progress */
-  .progress-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    display: none;
-  }
-  .progress-bar.show { display: block; }
-  .progress-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-  .progress-track { background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
-  .progress-fill { background: linear-gradient(90deg, var(--accent), var(--accent2)); height: 100%; border-radius: 4px; transition: width .3s; }
-  .progress-status { font-size: 11px; color: var(--accent); margin-top: 6px; font-family: var(--mono); }
+/* Table */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{background:var(--surface2)}
+th{padding:11px 12px;text-align:left;font-weight:500;color:var(--muted);font-size:10px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid rgba(31,45,69,.4);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.012)}
+.mono{font-family:var(--mono);font-size:11px}
+.num{text-align:right;font-family:var(--mono);font-size:11px}
+.desc-cell{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:help}
 
-  /* Table */
-  .table-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  thead { background: var(--surface2); }
-  th {
-    padding: 12px 14px;
-    text-align: left;
-    font-weight: 500;
-    color: var(--muted);
-    font-size: 11px;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-  td {
-    padding: 11px 14px;
-    border-bottom: 1px solid rgba(31,45,69,.5);
-    vertical-align: middle;
-  }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,.02); }
+/* Score */
+.score{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;font-family:var(--mono);font-size:13px;font-weight:700;margin:0 auto}
+.sc-a{background:rgba(16,185,129,.18);color:var(--success);border:2px solid rgba(16,185,129,.4)}
+.sc-b{background:rgba(245,158,11,.18);color:var(--warn);border:2px solid rgba(245,158,11,.4)}
+.sc-c{background:rgba(239,68,68,.18);color:var(--danger);border:2px solid rgba(239,68,68,.4)}
+.sc-n{background:rgba(100,116,139,.12);color:var(--muted);border:2px solid rgba(100,116,139,.2)}
 
-  .desc-cell { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .mono { font-family: var(--mono); font-size: 11px; }
-  .num { text-align: right; font-family: var(--mono); font-size: 12px; }
+/* Analysis steps */
+.analysis-cell{min-width:220px}
+.analysis-step{margin-bottom:4px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)}
+.step-header{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.step-num{font-size:9px;background:rgba(100,116,139,.2);color:var(--muted);border-radius:10px;padding:1px 6px;font-family:var(--mono)}
+.step-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.step-value{font-family:var(--mono);font-size:11px;color:var(--text)}
+.step-marca{font-size:10px;color:var(--accent);margin-top:1px}
+.step-na{font-size:10px;color:var(--muted);font-style:italic}
+.step-ok{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05)}
 
-  /* Status badges */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-  .badge-ok { background: rgba(16,185,129,.15); color: var(--success); border: 1px solid rgba(16,185,129,.3); }
-  .badge-warn { background: rgba(245,158,11,.15); color: var(--warn); border: 1px solid rgba(245,158,11,.3); }
-  .badge-bad { background: rgba(239,68,68,.15); color: var(--danger); border: 1px solid rgba(239,68,68,.3); }
-  .badge-loading { background: rgba(59,130,246,.15); color: var(--accent2); border: 1px solid rgba(59,130,246,.3); }
+/* Recommendation */
+.rec-cell{min-width:160px}
+.rec-box{padding:8px 10px;border-radius:8px;border:1px solid}
+.rec-title{font-size:11px;font-weight:600;margin-bottom:3px}
+.rec-detail{font-size:10px;line-height:1.4}
+.rec-participe{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08)}
+.rec-participe .rec-title{color:var(--success)}
+.rec-participe .rec-detail{color:rgba(16,185,129,.7)}
+.rec-verifique{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)}
+.rec-verifique .rec-title{color:var(--warn)}
+.rec-verifique .rec-detail{color:rgba(245,158,11,.7)}
+.rec-evite{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)}
+.rec-evite .rec-title{color:var(--danger)}
+.rec-evite .rec-detail{color:rgba(239,68,68,.7)}
+.rec-aguarde{border-color:var(--border);background:var(--surface2)}
+.rec-aguarde .rec-title{color:var(--muted)}
+.rec-aguarde .rec-detail{color:var(--muted)}
 
-  /* Diff indicator */
-  .diff-up { color: var(--success); }
-  .diff-down { color: var(--danger); }
+/* Modals */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:500px;max-width:92vw;max-height:90vh;overflow-y:auto}
+.modal-lg{width:680px}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:6px}
+.modal-sub{color:var(--muted);font-size:12px;margin-bottom:20px}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.opt{display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:12px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;background:var(--surface2);transition:border-color .15s}
+.opt:hover{border-color:var(--accent)}
+.opt.rec{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.3)}
+.opt-title{font-weight:500;font-size:13px}
+.opt-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.rec-tag{font-size:9px;background:rgba(16,185,129,.2);color:var(--success);padding:1px 7px;border-radius:8px;margin-left:6px;font-weight:700;letter-spacing:.5px}
+.detail-step{padding:12px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);margin-bottom:10px}
+.detail-step-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.detail-step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#000;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.detail-step-title{font-size:12px;font-weight:600}
+.detail-step-body{font-size:12px;color:var(--muted);line-height:1.6;padding-left:30px;white-space:pre-line}
 
-  /* Empty state */
-  .empty {
-    text-align: center;
-    padding: 64px 32px;
-    color: var(--muted);
-  }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
-
-  /* Export modal */
-  .overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.7);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-  }
-  .overlay.show { display: flex; }
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 32px;
-    width: 480px;
-    max-width: 90vw;
-  }
-  .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-  .modal-sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
-  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
-
-  /* Tooltip for long descriptions */
-  td[title] { cursor: help; }
-
-  .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--accent2); border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Fade in rows */
-  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
-  .row-anim { animation: fadeIn .2s ease forwards; }
-
-  .alert {
-    background: rgba(245,158,11,.1);
-    border: 1px solid rgba(245,158,11,.3);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: var(--warn);
-    margin-bottom: 16px;
-    display: none;
-  }
-  .alert.show { display: block; }
+.empty{text-align:center;padding:60px 32px;color:var(--muted)}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid var(--accent2);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
+.spinner-sm{width:8px;height:8px;border-width:1.5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.row-anim{animation:fadeIn .18s ease forwards}
+.alert{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--danger);margin-bottom:16px;display:none}
+.alert.show{display:block}
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="logo">LICIT.AI</div>
-  <span style="color:var(--border)">|</span>
-  <span style="font-size:13px; color:var(--muted)">Analisador de Competitividade</span>
-  <span class="header-sub">Fonte: API Compras.gov.br + Dados Abertos</span>
+  <span class="badge-v">UNIVERSAL v4</span>
+  <span style="color:var(--border);margin:0 4px">|</span>
+  <span style="font-size:12px;color:var(--muted)">Lê o Termo de Referência · Qualquer produto · Qualquer órgão</span>
+  <div class="header-right">API Compras.gov.br · SINAPI · Histórico UASG</div>
 </div>
 
 <div class="main">
 
-  <!-- Upload -->
+  <!-- Upload PDF -->
   <div class="upload-zone" id="uploadZone">
-    <input type="file" accept=".csv" id="fileInput" onchange="handleFile(this.files[0])">
-    <div class="upload-icon">📂</div>
-    <div class="upload-title">Arraste o CSV do pregão aqui</div>
-    <div class="upload-sub">ou clique para selecionar · Formato: planilha exportada do Licitei</div>
+    <input type="file" accept=".pdf" id="fileInput" onchange="handlePDF(this.files[0])">
+    <div style="font-size:30px;margin-bottom:12px">📄</div>
+    <div style="font-size:17px;font-weight:600;margin-bottom:6px">Arraste o Termo de Referência (PDF) aqui</div>
+    <div style="color:var(--muted);font-size:12px">O sistema extrai automaticamente: UASG, órgão, estado, pregão e todos os itens com valores</div>
   </div>
 
   <div class="alert" id="alertBox"></div>
 
-  <!-- Stats -->
-  <div class="stats" id="statsBox" style="display:none">
-    <div class="stat">
-      <div class="stat-label">Total de Itens</div>
-      <div class="stat-value blue" id="statTotal">0</div>
+  <!-- Organ bar -->
+  <div class="organ-bar" id="organBar">
+    <div class="organ-field">
+      <div class="organ-label">Órgão Comprador</div>
+      <div class="organ-value" id="oOrgao">—</div>
     </div>
-    <div class="stat">
-      <div class="stat-label">Competitivos</div>
-      <div class="stat-value green" id="statOk">0</div>
+    <div class="organ-field">
+      <div class="organ-label">UASG</div>
+      <div class="organ-value" id="oUasg">—</div>
     </div>
-    <div class="stat">
-      <div class="stat-label">Atenção</div>
-      <div class="stat-value yellow" id="statWarn">0</div>
+    <div class="organ-field">
+      <div class="organ-label">Estado</div>
+      <div class="organ-value" id="oEstado">—</div>
     </div>
-    <div class="stat">
-      <div class="stat-label">Risco Inexequível</div>
-      <div class="stat-value red" id="statBad">0</div>
+    <div class="organ-field">
+      <div class="organ-label">Pregão</div>
+      <div class="organ-value" id="oPregao">—</div>
+    </div>
+    <div class="organ-field">
+      <div class="organ-label">Total Itens</div>
+      <div class="organ-value" id="oTotal">—</div>
+    </div>
+    <div class="organ-field" style="border-right:none;margin-left:auto">
+      <div class="organ-label">Estratégia</div>
+      <div class="organ-value" style="color:var(--accent2)">Máximo ganho</div>
     </div>
   </div>
 
+  <!-- Stats -->
+  <div class="stats" id="statsBox" style="display:none">
+    <div class="stat"><div class="stat-label">Total Itens</div><div class="stat-value c-blue" id="sTotal">0</div></div>
+    <div class="stat"><div class="stat-label">✅ Participe</div><div class="stat-value c-green" id="sOk">0</div></div>
+    <div class="stat"><div class="stat-label">⚠️ Verifique</div><div class="stat-value c-yellow" id="sWarn">0</div></div>
+    <div class="stat"><div class="stat-label">🚫 Evite</div><div class="stat-value c-red" id="sBad">0</div></div>
+    <div class="stat"><div class="stat-label">— Sem Dado</div><div class="stat-value c-teal" id="sNd">0</div></div>
+  </div>
+
   <!-- Progress -->
-  <div class="progress-bar" id="progressBar">
-    <div class="progress-label">Consultando API de Preços do Governo Federal...</div>
-    <div class="progress-track">
-      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-header">
+      <span class="progress-label" id="progressLabel">Lendo PDF...</span>
+      <span class="progress-pct" id="progressPct">0%</span>
     </div>
-    <div class="progress-status" id="progressStatus">Aguardando...</div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-item" id="progressItem">Extraindo dados do Termo de Referência...</div>
   </div>
 
   <!-- Controls -->
   <div class="controls" id="controlsBox" style="display:none">
-    <button class="filter-btn active" onclick="setFilter('all', this)">Todos</button>
-    <button class="filter-btn" onclick="setFilter('ok', this)">✅ Competitivos</button>
-    <button class="filter-btn warn" onclick="setFilter('warn', this)">⚠️ Atenção</button>
-    <button class="filter-btn danger" onclick="setFilter('bad', this)">🚫 Risco</button>
-    <button class="btn btn-primary" id="exportBtn" onclick="showExport()">⬇ Exportar Planilha</button>
+    <button class="filter-btn active" onclick="setFilter('all',this)">Todos</button>
+    <button class="filter-btn" onclick="setFilter('ok',this)">✅ Participe</button>
+    <button class="filter-btn aw" onclick="setFilter('warn',this)">⚠️ Verifique</button>
+    <button class="filter-btn ad" onclick="setFilter('bad',this)">🚫 Evite</button>
+    <button class="filter-btn" onclick="setFilter('nd',this)">— Sem dado</button>
+    <button class="btn btn-primary" style="margin-left:auto" onclick="showExport()">⬇ Exportar Proposta</button>
   </div>
 
   <!-- Table -->
@@ -322,27 +221,26 @@
     <table>
       <thead>
         <tr>
-          <th style="width:48px">#</th>
-          <th>Descrição</th>
-          <th style="width:60px">Qtd.</th>
-          <th>Marca/Fabricante</th>
-          <th>Modelo</th>
-          <th class="num">Valor TR</th>
-          <th class="num">Preço Gov.</th>
-          <th class="num">Diferença</th>
-          <th style="width:130px">Status</th>
+          <th style="width:40px">#</th>
+          <th style="min-width:160px">Descrição</th>
+          <th style="width:50px">Qtd.</th>
+          <th style="width:100px">Unidade</th>
+          <th style="width:100px">Marca Sugerida</th>
+          <th class="num" style="width:90px">Valor TR</th>
+          <th style="min-width:220px">Análise de Mercado</th>
+          <th style="width:65px;text-align:center">Score</th>
+          <th style="min-width:160px">Recomendação</th>
+          <th style="width:36px"></th>
         </tr>
       </thead>
-      <tbody id="tableBody">
-      </tbody>
+      <tbody id="tableBody"></tbody>
     </table>
   </div>
 
-  <!-- Empty -->
   <div class="empty" id="emptyState">
-    <div class="empty-icon">🏛️</div>
-    <div class="empty-title">Nenhum arquivo carregado</div>
-    <div>Envie o CSV do pregão para iniciar a análise</div>
+    <div style="font-size:38px;margin-bottom:12px">📄</div>
+    <div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:6px">Anexe o Termo de Referência em PDF</div>
+    <div style="color:var(--muted);font-size:13px">O sistema lê o PDF, extrai todos os dados e faz a análise completa automaticamente</div>
   </div>
 
 </div>
@@ -350,321 +248,731 @@
 <!-- Export Modal -->
 <div class="overlay" id="exportModal">
   <div class="modal">
-    <div class="modal-title">Exportar Planilha</div>
-    <div class="modal-sub">Escolha quais itens incluir na planilha de proposta para o Licitei.</div>
-    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:24px;">
-      <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px; background:var(--surface2); border-radius:8px; border:1px solid var(--border);">
-        <input type="radio" name="exportOpt" value="all" checked> <span>Todos os itens (130)</span>
-      </label>
-      <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px; background:var(--surface2); border-radius:8px; border:1px solid var(--border);">
-        <input type="radio" name="exportOpt" value="ok"> <span>Somente competitivos ✅</span>
-      </label>
-      <label style="display:flex; align-items:center; gap:10px; cursor:pointer; padding:12px; background:var(--surface2); border-radius:8px; border:1px solid var(--border);">
-        <input type="radio" name="exportOpt" value="okwarn"> <span>Competitivos + Atenção (excluir riscos)</span>
-      </label>
-    </div>
+    <div class="modal-title">Exportar Proposta para o Licitei</div>
+    <div class="modal-sub">Todos os itens exportados com o valor do TR. Valor Mínimo = 90% do TR.</div>
+    <label class="opt rec">
+      <input type="radio" name="exp" value="ok_nodata" checked style="margin-top:2px;flex-shrink:0">
+      <div><div class="opt-title" style="color:var(--success)">✅ Participe + Sem Dado <span class="rec-tag">RECOMENDADO</span></div>
+      <div class="opt-sub">Itens favoráveis + sem análise — melhor estratégia</div></div>
+    </label>
+    <label class="opt">
+      <input type="radio" name="exp" value="ok" style="margin-top:2px;flex-shrink:0">
+      <div><div class="opt-title">✅ Somente "Participe"</div>
+      <div class="opt-sub">Apenas itens com mercado confirmado favorável</div></div>
+    </label>
+    <label class="opt">
+      <input type="radio" name="exp" value="okwarn" style="margin-top:2px;flex-shrink:0">
+      <div><div class="opt-title">✅ ⚠️ Participe + Verifique</div>
+      <div class="opt-sub">Exclui somente os de alto risco</div></div>
+    </label>
+    <label class="opt">
+      <input type="radio" name="exp" value="all" style="margin-top:2px;flex-shrink:0">
+      <div><div class="opt-title">Todos os itens</div>
+      <div class="opt-sub">Exporta todos independente da análise</div></div>
+    </label>
     <div class="modal-btns">
       <button class="btn btn-secondary" onclick="closeExport()">Cancelar</button>
-      <button class="btn btn-primary" onclick="exportCSV()">⬇ Baixar CSV</button>
+      <button class="btn btn-primary" onclick="exportCSV()">⬇ Baixar CSV para Licitei</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="overlay" id="detailModal">
+  <div class="modal modal-lg">
+    <div class="modal-title" id="detailTitle">Análise Completa</div>
+    <div class="modal-sub" id="detailDesc"></div>
+    <div id="detailSteps"></div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeDetail()">Fechar</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── Marcas por categoria ──────────────────────────────────────────────────────
-const MARCAS = {
-  "bloco de concreto":"Cimento Tocantins","manta asfáltica":"Viapol",
-  "massa calafetar":"Quartzolit","disco corte":"Norton","linha pedreiro":"Vonder",
-  "brita":"Pedreira Nacional","cimento portland":"Votoran","areia":"Areial São Paulo",
-  "espaçador":"Cortag","argamassa":"Quartzolit","azulejo":"Portobello",
-  "arame farpado":"Belgo","arame galvanizado":"Belgo","arame":"Belgo",
-  "revestimento cerâmico":"Portobello","revestimento piso":"Portobello",
-  "revestimento textura":"Suvinil","tijolo":"Cerâmica São Simão",
-  "vergalhão":"Gerdau","ferro construção":"Gerdau","impermeabilizante":"Vedacit",
-  "espuma":"Tigre","fita adesiva":"3M","fita":"Vonder","masseira":"Tramontina",
-  "desempenadeira":"Tramontina","tinta esmalte":"Suvinil","tinta acrílica":"Suvinil",
-  "tinta demarcação":"Suvinil","tinta industrial":"Suvinil","tinta base água":"Suvinil",
-  "tinta":"Suvinil","cabo rolo":"Tigre","massa corrida":"Suvinil",
-  "selador , fundo":"Suvinil","selador":"Suvinil","aguarrás":"Natrielli",
-  "lona plástica":"Polysack","rolo pintura":"Atlas","lixa":"Norton","verniz":"Suvinil",
-  "trincha":"Atlas","gesso":"Infibra","cal hidratada":"Votorantim",
-  "massa plástica":"Vedacit","diluente":"Natrielli","manta":"Viapol",
-  "resina":"Reichhold","catalisador":"Quimatic","massa vedação":"Vedacit",
-  "carrinho mão":"Vonder","escada":"Mor","alicate":"Tramontina",
-  "chave de fenda":"Tramontina","chave ajustável":"Tramontina",
-  "vara de manobra":"Cediport","detector":"Fluke","nível bolha":"Vonder",
-  "esquadro":"Vonder","formão":"Tramontina","serra mármore":"Makita",
-  "ferro de soldar":"Vonder","furadeira":"Makita",
-  "transformador soldagem":"Lincoln Electric","motosserra":"Stihl",
-  "andaime":"Alufer","estribo":"Gerdau","primer":"Suvinil","desincrostante":"Quimatic",
-  "adesivo selante":"Vedacit","chuveiro":"Docol","soleira":"Granitos Brasil",
+// Configurar PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function parseV(s){return parseFloat((s||'').replace(/[^\d,\.]/g,'').replace(',','.'))|| 0}
+function fmtBRL(v){if(!v&&v!==0)return'—';return'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
+function fmtPct(v){if(v===null||v===undefined)return'';return(v>=0?'+':'')+v.toFixed(1)+'%'}
+function median(arr){if(!arr.length)return null;const s=[...arr].sort((a,b)=>a-b);return s[Math.floor(s.length/2)]}
+function showAlert(msg){const el=document.getElementById('alertBox');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),5000)}
+
+// ── CATMAT lookup ─────────────────────────────────────────────────────────────
+const CATMAT_KW=[
+  {kw:['cimento portland','cimento'],c:178},
+  {kw:['areia'],c:2673},
+  {kw:['brita','pedra britada','pedrisco'],c:2672},
+  {kw:['argamassa'],c:5256},
+  {kw:['tijolo','bloco cerâmico','bloco de concreto'],c:10474},
+  {kw:['tinta acrílica'],c:5218},
+  {kw:['tinta esmalte','tinta sintética'],c:5219},
+  {kw:['tinta'],c:5218},
+  {kw:['vergalhão','ferro ca-50','ferro ca-25','aço ca'],c:10481},
+  {kw:['azulejo','porcelanato','revestimento cerâmico'],c:5254},
+  {kw:['impermeabilizante'],c:5228},
+  {kw:['cal hidratada'],c:176},
+  {kw:['lona'],c:5265},
+  {kw:['arame'],c:5275},
+  {kw:['gesso'],c:5280},
+  {kw:['telha'],c:5285},
+  {kw:['tubo ferro galvanizado','tubo galvanizado','cano galvanizado','ferro galvanizado'],c:4730},
+  {kw:['tubo pvc','cano pvc','tubo de pvc','cano soldável'],c:4735},
+  {kw:['tubo cpvc','tubo de cobre','cano de cobre'],c:4736},
+  {kw:['tubo corrugado','tubo flexível','tubo esgoto'],c:4738},
+  {kw:['cotovelo','joelho','luva hidráulica','conexão hidráulica','bucha','niple'],c:4740},
+  {kw:['registro','válvula','torneira','chuveiro','misturador'],c:4745},
+  {kw:['sifão','caixa sifonada','ralo'],c:4750},
+  {kw:['caixa dágua','caixa d\'água','reservatório'],c:4755},
+  {kw:['bomba dágua','bomba d\'água','bomba hidráulica','motobomba'],c:4760},
+  {kw:['calha','rufos'],c:4765},
+  {kw:['mangueira'],c:4770},
+  {kw:['fio elétrico','cabo elétrico','fio de cobre','cabo flexível'],c:4810},
+  {kw:['disjuntor','chave elétrica','disjuntor'],c:4815},
+  {kw:['quadro elétrico','quadro de distribuição'],c:4820},
+  {kw:['tomada','interruptor'],c:4825},
+  {kw:['eletroduto','conduite'],c:4830},
+  {kw:['gerador','grupo gerador'],c:4845},
+  {kw:['ar condicionado','split','climatizador'],c:4890},
+  {kw:['ventilador','exaustor'],c:4895},
+  {kw:['geladeira','refrigerador','freezer'],c:4900},
+  {kw:['micro-ondas','forno'],c:4905},
+  {kw:['bebedouro','purificador'],c:4910},
+  {kw:['lâmpada','luminária','refletor','led'],c:4915},
+  {kw:['cadeira','poltrona'],c:3982},
+  {kw:['mesa','bancada'],c:3985},
+  {kw:['armário','roupeiro','fichário','gaveteiro'],c:3980},
+  {kw:['sofá','divã','longarina'],c:3990},
+  {kw:['estante','prateleira','rack'],c:3987},
+  {kw:['cama','beliche'],c:3991},
+  {kw:['colchão','travesseiro'],c:3992},
+  {kw:['computador','desktop','cpu'],c:2358},
+  {kw:['notebook','laptop'],c:2359},
+  {kw:['monitor','tela','display'],c:2362},
+  {kw:['impressora'],c:2364},
+  {kw:['teclado'],c:2365},
+  {kw:['mouse'],c:2366},
+  {kw:['tablet'],c:2361},
+  {kw:['televisão','tv','televisor'],c:2370},
+  {kw:['câmera','câmara','cftv','câmera de segurança'],c:2380},
+  {kw:['projetor','datashow'],c:2375},
+  {kw:['roteador','switch','access point'],c:2390},
+  {kw:['nobreak','ups'],c:2395},
+  {kw:['papel a4','papel sulfite','resma'],c:5010},
+  {kw:['caneta','marcador'],c:5015},
+  {kw:['grampeador','grampo'],c:5020},
+  {kw:['cartucho','toner','refil'],c:5035},
+  {kw:['detergente'],c:6010},
+  {kw:['desinfetante','hipoclorito','água sanitária'],c:6015},
+  {kw:['sabão','sabonete'],c:6020},
+  {kw:['papel higiênico','papel toalha'],c:6025},
+  {kw:['vassoura','rodo','espanador'],c:6030},
+  {kw:['álcool','álcool gel'],c:6035},
+  {kw:['luva descartável','luva de látex'],c:6040},
+  {kw:['máscara descartável','epi'],c:6045},
+  {kw:['saco de lixo'],c:6055},
+  {kw:['furadeira'],c:7010},
+  {kw:['parafusadeira'],c:7015},
+  {kw:['martelo','marreta'],c:7020},
+  {kw:['chave de fenda','chave philips'],c:7025},
+  {kw:['alicate'],c:7030},
+  {kw:['serra','motosserra'],c:7035},
+  {kw:['escada'],c:7040},
+  {kw:['trena','fita métrica'],c:7045},
+  {kw:['pneu'],c:8010},
+  {kw:['óleo lubrificante','óleo motor'],c:8015},
+  {kw:['bateria automotiva'],c:8020},
+  {kw:['combustível','gasolina','diesel'],c:8030},
+  {kw:['camisa','camiseta','uniforme'],c:9010},
+  {kw:['calça','bermuda'],c:9015},
+  {kw:['bota','sapato','coturno'],c:9020},
+  {kw:['capacete'],c:9025},
+  {kw:['colete'],c:9030},
+  {kw:['café','café torrado'],c:1010},
+  {kw:['açúcar'],c:1015},
+  {kw:['água mineral','galão de água'],c:1020},
+  {kw:['copo descartável'],c:1025},
+  {kw:['extintor'],c:11015},
+  {kw:['gás','glp','botijão'],c:11010},
+];
+
+const MARCA_DEFAULT={
+  178:'Votoran',2673:'Areial Nacional',2672:'Pedreira Nacional',5256:'Quartzolit',
+  10474:'Cerâmica Nacional',5218:'Suvinil',5219:'Suvinil',10481:'Gerdau',
+  5254:'Portobello',5228:'Vedacit',176:'Votorantim',5265:'Polysack',5275:'Belgo',
+  4730:'Tigre/Amanco',4735:'Tigre/Amanco',4736:'Tigre/Amanco',4738:'Tigre/Amanco',
+  4740:'Tigre/Amanco',4745:'Docol/Deca',4750:'Tigre/Amanco',4755:'Fortlev',
+  4760:'Schneider/Lepono',4765:'Tigre',4770:'Tigre/Netafim',
+  4810:'Prysmian/Nexans',4815:'Schneider/WEG',4820:'Schneider',4825:'Schneider/Tramontina',
+  4830:'Tigre',4845:'Stemac/Cummins',4890:'Samsung/Elgin',4895:'Mondial/Ventisol',
+  4900:'Electrolux/Brastemp',4905:'LG/Electrolux',4910:'Ibbl/Eletropura',4915:'Osram/Philips',
+  3982:'Cavaletti',3985:'Móveis Domel',3980:'Ind. Nacional',3990:'Estofados Nacional',
+  3987:'Móveis Nacional',3991:'Herval/Castor',3992:'Ortobom',
+  2358:'Dell/HP',2359:'Dell/HP/Lenovo',2362:'Samsung/LG',2364:'HP/Epson',
+  2365:'Microsoft/Logitech',2366:'Logitech',2361:'Samsung',2370:'Samsung/LG',
+  2380:'Intelbras/Hikvision',2375:'Epson/Benq',2390:'TP-Link/Cisco',2395:'APC/SMS',
+  5010:'Chamex',5015:'Bic/Pilot',5020:'Rapid',5035:'HP/Epson original',
+  6010:'Ypê',6015:'Pinho Sol',6020:'Protex',6025:'Scott',6030:'Bettanin',
+  6035:'Rioquímica',6040:'Supermax',6045:'3M',6055:'Descarpack',
+  7010:'Makita/Bosch',7015:'Makita/Dewalt',7020:'Tramontina',7025:'Tramontina',
+  7030:'Tramontina',7035:'Stihl',7040:'Mor',7045:'Stanley',
+  8010:'Bridgestone/Goodyear',8015:'Castrol/Mobil',8020:'Heliar/Moura',8030:'Petrobras',
+  9010:'Ind. Têxtil Nacional',9015:'Ind. Têxtil Nacional',9020:'Vulcabras',
+  9025:'MSA/Plastcor',9030:'Delta Plus',1010:'Pilão/3 Corações',
+  1015:'União',1020:'Crystal/Indaiá',1025:'Copobrás',11015:'Amerex',11010:'Ultragaz',
 };
 
-function getMarca(desc) {
-  const dl = desc.toLowerCase();
-  for (const [k, v] of Object.entries(MARCAS)) {
-    if (dl.includes(k)) return v;
-  }
-  return "Marca Nacional Genérica";
-}
-
-function parseValor(s) {
-  return parseFloat(s.replace(/[^\d,\.]/g, '').replace(',', '.')) || 0;
-}
-
-function fmtBRL(v) {
-  if (!v && v !== 0) return '—';
-  return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
-
-// ── Estado ────────────────────────────────────────────────────────────────────
-let allItems = [];
-let currentFilter = 'all';
-let apiCache = {};
-
-// ── Upload ────────────────────────────────────────────────────────────────────
-const uploadZone = document.getElementById('uploadZone');
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
-uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
-
-function handleFile(file) {
-  if (!file || !file.name.endsWith('.csv')) {
-    showAlert('Por favor envie um arquivo .csv exportado do Licitei.');
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = e => parseCSV(e.target.result);
-  reader.readAsText(file, 'UTF-8');
-}
-
-function parseCSV(text) {
-  const lines = text.split('\n').filter(l => l.trim());
-  const header = parseCSVLine(lines[0]);
-  const rows = lines.slice(1).map(l => {
-    const cols = parseCSVLine(l);
-    const obj = {};
-    header.forEach((h, i) => obj[h.trim().replace(/^\uFEFF/, '')] = (cols[i] || '').trim());
-    return obj;
-  }).filter(r => r['Item'] && r['Descrição']);
-
-  allItems = rows.map(r => ({
-    item: r['Item'],
-    desc: r['Descrição'],
-    qtd: r['Qtd.'] || r['Qtd'],
-    valorTR: parseValor(r['Valor Ref.'] || r['Valor Ref'] || '0'),
-    marca: getMarca(r['Descrição']),
-    modelo: 'C/EDITAL',
-    valorMin: parseValor(r['Valor Ref.'] || r['Valor Ref'] || '0'),
-    valorInicial: parseValor(r['Valor Ref.'] || r['Valor Ref'] || '0'),
-    codigoLicitei: r['codigo_licitei'] || '',
-    grupo: r['grupo'] || '',
-    precosGov: null,
-    mediaGov: null,
-    status: 'loading',
-    diff: null,
-  }));
-
-  document.getElementById('emptyState').style.display = 'none';
-  document.getElementById('statsBox').style.display = 'grid';
-  document.getElementById('controlsBox').style.display = 'flex';
-  document.getElementById('tableWrap').style.display = 'block';
-  document.getElementById('statTotal').textContent = allItems.length;
-
-  renderTable();
-  fetchAllPrices();
-}
-
-function parseCSVLine(line) {
-  const result = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') { inQ = !inQ; continue; }
-    if (c === ',' && !inQ) { result.push(cur); cur = ''; continue; }
-    cur += c;
-  }
-  result.push(cur);
-  return result;
-}
-
-// ── API Compras.gov.br ────────────────────────────────────────────────────────
-// Mapeamento de palavras-chave para códigos CATMAT aproximados
-const CATMAT_MAP = {
-  'cimento portland': 178, 'cimento': 178,
-  'areia': 2673, 'brita': 2672,
-  'argamassa': 5256, 'tijolo': 10474,
-  'tinta acrílica': 5218, 'tinta esmalte': 5219, 'tinta': 5218,
-  'vergalhão': 10481, 'ferro construção': 10481,
-  'bloco de concreto': 10474, 'azulejo': 5254,
-  'porcelanato': 5254, 'impermeabilizante': 5228,
-  'cal hidratada': 176,
-};
-
-function getCatmat(desc) {
-  const dl = desc.toLowerCase();
-  for (const [k, v] of Object.entries(CATMAT_MAP)) {
-    if (dl.includes(k)) return v;
-  }
+function getCatmat(desc){
+  const dl=desc.toLowerCase();
+  for(const e of CATMAT_KW)
+    for(const kw of e.kw)
+      if(dl.includes(kw))return e.c;
   return null;
 }
 
-async function fetchGovPrice(catmat) {
-  if (apiCache[catmat] !== undefined) return apiCache[catmat];
-  try {
-    const url = `https://dadosabertos.compras.gov.br/modulo-pesquisa-preco/1_consultarMaterial?codigoItemCatalogo=${catmat}&pagina=1&tamanhoPagina=20`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) { apiCache[catmat] = null; return null; }
-    const data = await res.json();
-    const precos = (data.resultado || [])
-      .map(r => parseFloat(r.precoUnitario))
-      .filter(v => v > 0 && v < 1000000);
-    if (!precos.length) { apiCache[catmat] = null; return null; }
-    const media = precos.reduce((a, b) => a + b, 0) / precos.length;
-    const mediana = [...precos].sort((a,b)=>a-b)[Math.floor(precos.length/2)];
-    apiCache[catmat] = { media, mediana, min: Math.min(...precos), max: Math.max(...precos), n: precos.length };
-    return apiCache[catmat];
-  } catch {
-    apiCache[catmat] = null;
-    return null;
+// ── Estado ────────────────────────────────────────────────────────────────────
+let allItems=[],currentFilter='all',cache={},organInfo={};
+
+// ── Upload PDF ────────────────────────────────────────────────────────────────
+const uz=document.getElementById('uploadZone');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag')});
+uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
+uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');handlePDF(e.dataTransfer.files[0])});
+
+async function handlePDF(file){
+  if(!file||!file.name.toLowerCase().endsWith('.pdf')){
+    showAlert('Por favor envie um arquivo PDF do Termo de Referência.');
+    return;
   }
-}
 
-async function fetchAllPrices() {
-  const bar = document.getElementById('progressBar');
-  const fill = document.getElementById('progressFill');
-  const status = document.getElementById('progressStatus');
-  bar.classList.add('show');
+  // Helper unificado de progresso — usado em todas as fases
+  const prog=(pct,label,item)=>{
+    document.getElementById('progressFill').style.width=pct+'%';
+    document.getElementById('progressPct').textContent=Math.round(pct)+'%';
+    if(label)document.getElementById('progressLabel').textContent=label;
+    if(item)document.getElementById('progressItem').textContent=item;
+  };
 
-  let done = 0;
-  // Processar em lotes de 5 para não sobrecarregar
-  const batchSize = 5;
-  for (let i = 0; i < allItems.length; i += batchSize) {
-    const batch = allItems.slice(i, i + batchSize);
-    await Promise.all(batch.map(async item => {
-      const catmat = getCatmat(item.desc);
-      if (catmat) {
-        const gov = await fetchGovPrice(catmat);
-        item.mediaGov = gov ? gov.mediana : null;
-      } else {
-        item.mediaGov = null;
-      }
-      // Classificar
-      item.status = classifyItem(item);
-      item.diff = item.mediaGov ? ((item.valorTR - item.mediaGov) / item.mediaGov * 100) : null;
-      done++;
-    }));
-    const pct = Math.round(done / allItems.length * 100);
-    fill.style.width = pct + '%';
-    status.textContent = `Analisado ${done} de ${allItems.length} itens...`;
+  document.getElementById('progressWrap').classList.add('show');
+  prog(5,'Lendo PDF...','Carregando arquivo...');
+
+  try{
+    const arrayBuffer=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+    let fullText='';
+
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      const pageText=content.items.map(item=>item.str).join(' ');
+      fullText+=pageText+'\n';
+      const p=Math.round(5+i/pdf.numPages*30);
+      prog(p,`Lendo PDF... (${i}/${pdf.numPages} páginas)`,`Página ${i} de ${pdf.numPages}`);
+    }
+
+    prog(38,'Identificando itens e valores...','Analisando estrutura do documento...');
+
+    const parsed=parseTR(fullText);
+    if(!parsed.items.length){
+      showAlert('Não foi possível extrair os itens do PDF. Verifique se o PDF não é escaneado ou protegido. O sistema suporta TRs do Compras.gov.br e do modelo CGU/SEGES.');
+      document.getElementById('progressWrap').classList.remove('show');
+      return;
+    }
+
+    organInfo=parsed.organ;
+    allItems=parsed.items;
+
+    uz.classList.add('done');
+    uz.querySelector('div:nth-child(2)').textContent='📄';
+    uz.querySelector('div:nth-child(3)').textContent=`✅ ${file.name}`;
+    uz.querySelector('div:nth-child(4)').textContent=`${allItems.length} itens extraídos — ${organInfo.orgao}`;
+
+    document.getElementById('oOrgao').textContent=organInfo.orgao;
+    document.getElementById('oUasg').textContent=organInfo.uasg||'—';
+    document.getElementById('oEstado').textContent=organInfo.estado+(organInfo.cidade?` / ${organInfo.cidade}`:'');
+    document.getElementById('oPregao').textContent=organInfo.pregao;
+    document.getElementById('oTotal').textContent=allItems.length+' itens';
+    document.getElementById('organBar').classList.add('show');
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('statsBox').style.display='grid';
+    document.getElementById('controlsBox').style.display='flex';
+    document.getElementById('tableWrap').style.display='block';
+    document.getElementById('sTotal').textContent=allItems.length;
+
     renderTable();
-    updateStats();
-  }
+    runAnalysis(); // background
 
-  status.textContent = `✓ Análise concluída — ${allItems.length} itens processados`;
-  setTimeout(() => bar.classList.remove('show'), 3000);
+  }catch(e){
+    console.error(e);
+    showAlert('Erro ao processar o PDF: '+e.message);
+    document.getElementById('progressWrap').classList.remove('show');
+  }
 }
 
-function classifyItem(item) {
-  if (!item.mediaGov) return 'nodata';
-  const diff = (item.valorTR - item.mediaGov) / item.mediaGov * 100;
-  if (diff < -25) return 'bad';    // TR muito abaixo do mercado gov — risco
-  if (diff < -10) return 'warn';   // TR um pouco abaixo
-  return 'ok';                      // TR compatível ou acima
+// ── Parser do TR — suporta DOIS formatos ──────────────────────────────────────
+// Formato A: Compras.gov.br (RelacaoItens) — padrão antigo com "Descrição Detalhada"
+// Formato B: CGU/SEGES padrão — tabela com ITEM | ESPECIFICAÇÃO | CATMAT | UNIDADE | QTD | VALOR
+function parseTR(text){
+  const t=text.replace(/\s+/g,' ');
+
+  // ── Detectar formato ──
+  const isFormatoB=t.includes('Termo de Referência')&&(t.includes('CATMAT')||t.includes('ESPECIFICAÇÃO'));
+
+  // ── Extrair órgão / UASG ──
+  let uasg='',orgao='',estado='',cidade='',pregao='—';
+
+  if(isFormatoB){
+    // Formato B: "Número do artefato UASG ... 23/2026 120669-BASE AéREA DE SANTA CRUZ"
+    const uasgMatch=t.match(/(\d{6})[- ]+([A-ZÀ-Ú][^\d]+?)(?=\s+(?:GERALDO|Editado|Número|Atualizado|\d{2}\/\d{2}\/\d{4}))/i)
+      || t.match(/UASG\s+(\d{6})/i);
+    if(uasgMatch){
+      uasg=uasgMatch[1].trim();
+      orgao=(uasgMatch[2]||'').trim().replace(/[-]+$/,'').trim();
+    }
+    // Tentar extrair órgão do título
+    if(!orgao||orgao.length<5){
+      const tituloMatch=t.match(/([A-ZÁÉÍÓÚÃÕ][A-ZÁÉÍÓÚÃÕ\s]{5,50})\s+Termo de Referência/i);
+      if(tituloMatch)orgao=tituloMatch[1].trim();
+    }
+    // Número do TR
+    const trMatch=t.match(/Termo de Referência\s+(\d+\/\d+)/i)||t.match(/(\d+\/\d{4})\s+\d{6}/);
+    if(trMatch)pregao=`TR ${trMatch[1]}`;
+    // Estado do endereço de entrega
+    const endMatch=t.match(/endereço\s+([^,\n]+,[^,\n]+[-–]\s*([A-Z]{2}))/i)
+      || t.match(/entregu[ea][rs]?\s+no\s+seguinte\s+endereço\s+([^,]+,\s*([A-Z]{2}))/i)
+      || t.match(/Santa Cruz,\s*Rio de Janeiro[-–\s]*RJ/i);
+    if(endMatch){
+      estado='RJ';cidade='Rio de Janeiro';
+    } else {
+      // Inferir do UASG
+      estado=inferEstadoFromUASG(uasg);
+    }
+  } else {
+    // Formato A: "160122 - 55 BATALHAO DE INFANTARIA"
+    const uasgMatch=t.match(/(\d{6})\s*[-–]\s*([^\d][^|]+?)(?=\s+RELAÇÃO|\s+PREGÃO|\s+\d{6})/i);
+    if(uasgMatch){uasg=uasgMatch[1].trim();orgao=uasgMatch[2].trim();}
+    const pregaoMatch=t.match(/PREG[ÃA]O\s+ELETR[ÔO]NICO\s+N[Oº°]?\s*(\d+\/\d+)/i)||t.match(/PE\s+(\d+\/\d+)/i);
+    if(pregaoMatch)pregao=`PE ${pregaoMatch[1]}`;
+    const localMatch=t.match(/Local de Entrega[^:]*:\s*([^/(]+?)\s*\/\s*([A-Z]{2})/i);
+    if(localMatch){cidade=localMatch[1].trim();estado=localMatch[2].trim();}
+    else estado=inferEstadoFromUASG(uasg);
+  }
+
+  if(!orgao||orgao.length<3)orgao='Órgão Federal';
+
+  // ── Extrair itens ──
+  const items=[];
+
+  if(isFormatoB){
+    // ── Formato B: tabela "ITEM ESPECIFICAÇÃO CATMAT UNIDADE QUANTIDADE VALOR UNITÁRIO VALOR TOTAL" ──
+    // O PDF é convertido para texto linear. Precisamos capturar os blocos de cada linha da tabela.
+    // Padrão típico após extração: "1 TUBO GALVANIZADO... 237056 UN 20 R$ 825,00 R$ 16.500,00"
+    // Mas pode vir fragmentado. Usamos estratégia multi-regex.
+
+    // Regex principal: número do item + descrição + catmat (6 dígitos) + unidade + qtd + valor
+    // Formato: "N DESCRICAO CATMAT UN QTD R$ X,XX R$ Y"
+    const reB=/\b(\d{1,3})\s+((?:[A-ZÁÉÍÓÚÃÕ"][A-Za-záéíóúãõç,.\-\/"()\d\s]+?)){1,200}\s+(\d{5,6})\s+(UN|M²|M2|KG|L|M³|M3|CX|PC|PAR|MT|RL|EMB|SC|PT|GL|CT|FD|BD|AMP|COM|DZ|GR|KIT|SV|UNID)\s+(\d+(?:[.,]\d+)?)\s+R\$\s*([\d.,]+)/gi;
+
+    let m;
+    while((m=reB.exec(t))!==null){
+      const num=parseInt(m[1]);
+      if(num<1||num>999)continue;
+      const nome=m[2].replace(/\s+/g,' ').trim();
+      const catmatNum=parseInt(m[3]);
+      const unidade=m[4];
+      const qtd=m[5].replace(',','');
+      const valor=parseV(m[6]);
+      if(!valor||valor<=0)continue;
+      // Evitar duplicatas
+      if(items.find(i=>parseInt(i.item)===num&&Math.abs(i.valorTR-valor)<0.01))continue;
+      const catmat=catmatNum||getCatmat(nome);
+      items.push(makeItem(String(num),nome,qtd,unidade,valor,catmat));
+    }
+
+    // Se não encontrou nada, tenta regex mais relaxado sem CATMAT
+    if(items.length<3){
+      // Padrão: número + descrição + unidade + qtd + valor
+      const reRelax=/\b(\d{1,3})\s+((?:[A-ZÁÉÍÓÚÃÕ][A-Za-záéíóúãõç,.\-\/"()\d\s]{5,200}?))\s+(UN|M²|KG|L|M³|CX|PC|PAR|MT|RL|EMB|SC)\s+(\d+)\s+R\$\s*([\d.,]+)/gi;
+      while((m=reRelax.exec(t))!==null){
+        const num=parseInt(m[1]);
+        if(num<1||num>999)continue;
+        const nome=m[2].replace(/\s+/g,' ').trim();
+        const qtd=m[4];
+        const valor=parseV(m[5]);
+        if(!valor)continue;
+        if(items.find(i=>parseInt(i.item)===num))continue;
+        items.push(makeItem(String(num),nome,qtd,m[3],valor,getCatmat(nome)));
+      }
+    }
+
+  } else {
+    // ── Formato A: Compras.gov.br com "Descrição Detalhada" ──
+    const reA=/(\d+)\s*[-–]\s*([^\n]+?)\s+Descrição Detalhada\s*:\s*([\s\S]*?)Valor Unitário \(R\$\)\s*:\s*([\d.,]+)\s+Unidade de Fornecimento\s*:\s*([^\n]+?)\s+Quantidade\s+(?:Total|Mínima Cotada)\s*:\s*(\d+)/gi;
+    let m;
+    while((m=reA.exec(t))!==null){
+      const nome=m[2].trim();
+      const descDetalhada=m[3].replace(/Tratamento Diferenciado[\s\S]*$/,'').trim();
+      const valor=parseV(m[4]);
+      if(!valor)continue;
+      const catmat=getCatmat(nome+' '+descDetalhada);
+      const desc=`${nome} / ${descDetalhada}`.replace(/\s+/g,' ');
+      items.push(makeItem(m[1],desc,m[6],m[5].trim(),valor,catmat,nome));
+    }
+    // Fallback formato A
+    if(!items.length){
+      const reFallback=/(\d+)\s*[-–]\s*([^\n]+?)\n[\s\S]*?Valor Unitário \(R\$\)\s*:\s*([\d.,]+)\s*\n[\s\S]*?Quantidade Total\s*:\s*(\d+)/gi;
+      while((m=reFallback.exec(t))!==null){
+        const valor=parseV(m[3]);
+        if(!valor)continue;
+        const nome=m[2].trim();
+        items.push(makeItem(m[1],nome,m[4],'UN',valor,getCatmat(nome)));
+      }
+    }
+  }
+
+  return{
+    organ:{uasg,orgao,estado,cidade,pregao},
+    items,
+  };
+}
+
+function makeItem(num,desc,qtd,unidade,valorTR,catmat,nomeSimples){
+  return{
+    item:num,
+    desc:desc.substring(0,400),
+    nomeSimples:(nomeSimples||desc).substring(0,80),
+    qtd:String(qtd).replace(/[.,]\d+$/,''),
+    unidade:unidade||'UN',
+    valorTR,
+    catmat,
+    marca:MARCA_DEFAULT[catmat]||'Conforme edital',
+    modelo:'C/EDITAL',
+    codigoLicitei:'',grupo:'',
+    step1:{found:false},step2:{found:false},step3:{found:false},
+    status:'loading',score:null,diff:null,recText:'',recDetail:'',
+  };
+}
+
+function inferEstadoFromUASG(uasg){
+  if(!uasg)return'DF';
+  const p2=uasg.substring(0,2);
+  const map={'16':'MG','12':'AC','13':'AM','15':'PA','21':'MA','22':'PI','23':'CE',
+    '24':'RN','25':'PB','26':'PE','27':'AL','28':'SE','29':'BA','31':'MG',
+    '32':'ES','33':'RJ','35':'SP','41':'PR','42':'SC','43':'RS',
+    '50':'MS','51':'MT','52':'GO','53':'DF','11':'DF','12':'RJ'};
+  return map[p2]||'DF';
+}
+
+// ── Análise ───────────────────────────────────────────────────────────────────
+async function runAnalysis(){
+  const {estado}=organInfo;
+
+  // Mostrar tabela imediatamente com "Participe por padrão"
+  for(const item of allItems){calcScore(item);}
+  renderTable();updateStats();
+
+  // CATMATs únicos — itens repetidos usam cache automaticamente
+  const catmatsUnicos=[...new Set(allItems.filter(i=>i.catmat).map(i=>i.catmat))];
+  const total=catmatsUnicos.length||1;
+
+  // Helper de progresso da análise — escala de 42% a 98%
+  let done=0;
+  const updProg=()=>{
+    const p=42+Math.round(done/total*56);
+    document.getElementById('progressFill').style.width=p+'%';
+    document.getElementById('progressPct').textContent=p+'%';
+    document.getElementById('progressLabel').textContent=
+      `Consultando base do governo... (${done}/${total} produtos)`;
+    document.getElementById('progressItem').textContent=
+      done===0?'Iniciando consultas...':`${done} de ${total} produtos consultados`;
+  };
+  updProg(); // mostra 42% imediatamente ao começar
+
+  // Lotes de 10 em paralelo — cada item atualiza ao terminar
+  const LOTE=10;
+  for(let i=0;i<catmatsUnicos.length;i+=LOTE){
+    const lote=catmatsUnicos.slice(i,i+LOTE);
+    await Promise.all(lote.map(async catmat=>{
+      await fetchUnico(catmat,estado);
+      done++;
+      updProg();
+      for(const item of allItems) calcScore(item);
+      renderTable();updateStats();
+    }));
+  }
+
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('progressPct').textContent='100%';
+  document.getElementById('progressLabel').textContent=`✓ Análise completa — ${allItems.length} itens`;
+  document.getElementById('progressItem').textContent='Pronto para exportar!';
+  for(const item of allItems) calcScore(item);
+  renderTable();updateStats();
+  setTimeout(()=>document.getElementById('progressWrap').classList.remove('show'),2000);
+}
+
+// ── Atas de Registro de Preços homologadas via Cloudflare Worker ──────────
+// Worker próprio = sem CORS, sem proxy instável, chamada direta à API do governo
+// Troque WORKER_URL pela URL do seu Worker após o deploy
+
+const WORKER_URL='https://mflicita.awprodutoseservicos.workers.dev';
+
+async function fetchUnico(catmat,estado){
+  const keyReg=`reg_${catmat}_${estado}`;
+  const keyNac=`nac_${catmat}`;
+  if(cache[keyReg]!==undefined&&cache[keyNac]!==undefined)return;
+
+  const limite=new Date();limite.setMonth(limite.getMonth()-6);
+
+  const fetchAta=async(key,uf)=>{
+    if(cache[key]!==undefined)return;
+    try{
+      // Chama o Worker próprio — sem CORS, sem proxy terceiro
+      let url=`${WORKER_URL}?catmat=${catmat}&tipo=ata`;
+      if(uf)url+=`&uf=${uf}`;
+
+      const res=await fetch(url,{signal:AbortSignal.timeout(8000)});
+      if(!res.ok)throw new Error('bad');
+      const data=await res.json();
+
+      cache[key]=(data.resultado||[])
+        .filter(r=>{
+          const v=parseFloat(r.valorUnitario||r.precoUnitario||0);
+          return v>0&&v<1e7;
+        })
+        .filter(r=>{
+          const dt=r.dataAssinatura||r.dataResultado||'';
+          return !dt||new Date(dt)>=limite;
+        })
+        .map(r=>({
+          preco:parseFloat(r.valorUnitario||r.precoUnitario),
+          marca:(r.marca||r.marcaFabricante||'').trim(),
+          uf:(r.ufOrgao||'').trim().toUpperCase(),
+          orgao:(r.nomeOrgao||'').trim(),
+          ata:r.numeroAta||'',
+          data:r.dataAssinatura||r.dataResultado||''
+        }));
+    }catch{
+      cache[key]=[];
+    }
+  };
+
+  // Regional (com UF) e nacional (sem UF) em paralelo
+  await Promise.all([
+    fetchAta(keyReg,estado),
+    fetchAta(keyNac,null),
+  ]);
+}
+
+// Compatibilidade
+async function fetchPrices(catmat,estado,uasg){return[];}
+async function fetchAPI(catmat,estado,uasg){return[];}
+
+function getBestMarca(results){
+  if(!results||!results.length)return null;
+  const comMarca=results.filter(r=>r.marca&&r.marca.length>2&&!r.marca.match(/^(sem|s\/|n\/a|nao|não)/i));
+  if(!comMarca.length)return null;
+  return [...comMarca].sort((a,b)=>a.preco-b.preco)[0].marca;
+}
+
+function calcScore(item){
+  const estado=organInfo.estado||'';
+  const keyReg=`reg_${item.catmat}_${estado}`;
+  const keyNac=`nac_${item.catmat}`;
+  const reg=cache[keyReg]||[];
+  const nac=cache[keyNac]||[];
+
+  // Referência: regional se tiver dados suficientes (≥3), senão nacional
+  const refDados=reg.length>=3?reg:nac.length?nac:null;
+
+  // Preencher steps para exibição na tabela
+  if(reg.length){
+    item.step2={found:true,preco:median(reg.map(r=>r.preco)),marca:getBestMarca(reg)||MARCA_DEFAULT[item.catmat],n:reg.length};
+    item.marca=item.step2.marca||item.marca;
+  }
+  if(nac.length){
+    item.step3={found:true,preco:median(nac.map(r=>r.preco)),marca:getBestMarca(nac)||MARCA_DEFAULT[item.catmat],n:nac.length};
+    if(!reg.length)item.marca=item.step3.marca||item.marca;
+  }
+
+  const ref=reg.length>=3?item.step2:nac.length?item.step3:null;
+
+  if(!ref||!refDados){
+    // SEM HISTÓRICO → Participe por padrão
+    item.status='ok';item.score=7;item.diff=null;
+    item.recText='✓ Participe';
+    item.recDetail='Sem histórico na base — TR usado como referência. Verifique seu custo antes de ofertar.';
+    return;
+  }
+
+  const diff=((item.valorTR-ref.preco)/ref.preco)*100;
+  item.diff=diff;
+  let score;
+  if(diff>=25)score=9;
+  else if(diff>=10)score=8;
+  else if(diff>=0)score=7;
+  else if(diff>=-10)score=6;
+  else if(diff>=-20)score=4;
+  else if(diff>=-30)score=2;
+  else score=1;
+  item.score=score;
+  item.status=score>=7?'ok':score>=4?'warn':'bad';
+  if(score>=7){item.recText='✓ Participe';item.recDetail=`TR ${fmtPct(diff)} acima do mercado — boa margem`;}
+  else if(score>=4){item.recText='⚠ Verifique';item.recDetail=`TR ${fmtPct(diff)} — analise seus custos`;}
+  else{item.recText='✕ Evite';item.recDetail=`TR ${fmtPct(diff)} — abaixo do mercado, risco alto`;}
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
-function renderTable() {
-  const body = document.getElementById('tableBody');
-  const filtered = allItems.filter(item => {
-    if (currentFilter === 'all') return true;
-    if (currentFilter === 'ok') return item.status === 'ok' || item.status === 'nodata';
-    if (currentFilter === 'warn') return item.status === 'warn';
-    if (currentFilter === 'bad') return item.status === 'bad';
+function renderTable(){
+  const body=document.getElementById('tableBody');
+  const filtered=allItems.filter(item=>{
+    if(currentFilter==='all')return true;
+    if(currentFilter==='ok')return item.status==='ok';
+    if(currentFilter==='warn')return item.status==='warn';
+    if(currentFilter==='bad')return item.status==='bad';
+    if(currentFilter==='nd')return item.status==='nodata'||item.status==='loading';
     return true;
   });
 
-  body.innerHTML = filtered.map((item, idx) => {
-    const badgeCls = item.status === 'loading' ? 'badge-loading' :
-                     item.status === 'ok' ? 'badge-ok' :
-                     item.status === 'warn' ? 'badge-warn' :
-                     item.status === 'bad' ? 'badge-bad' : 'badge-loading';
-    const badgeText = item.status === 'loading' ? '<span class="spinner"></span> Consultando' :
-                      item.status === 'ok' ? '✓ Competitivo' :
-                      item.status === 'warn' ? '⚠ Atenção' :
-                      item.status === 'bad' ? '✕ Risco' : '— Sem dado';
-    const diffHtml = item.diff !== null
-      ? `<span class="${item.diff >= 0 ? 'diff-up' : 'diff-down'}">${item.diff >= 0 ? '+' : ''}${item.diff.toFixed(1)}%</span>`
-      : '<span style="color:var(--muted)">—</span>';
+  body.innerHTML=filtered.map((item,idx)=>{
+    const shortDesc=item.nomeSimples||item.desc.split('/')[0].trim();
+    const isLoad=item.status==='loading';
+    let scCls='sc-n',scVal='—';
+    if(isLoad)scVal=`<span class="spinner spinner-sm"></span>`;
+    else if(item.score!==null){scVal=item.score;scCls=item.score>=7?'sc-a':item.score>=4?'sc-b':'sc-c';}
 
-    const shortDesc = item.desc.split('/')[0].trim();
+    let recCls='rec-aguarde';
+    if(!isLoad){
+      if(item.status==='ok')recCls='rec-participe';
+      else if(item.status==='warn')recCls='rec-verifique';
+      else if(item.status==='bad')recCls='rec-evite';
+    }
 
-    return `<tr class="row-anim" style="animation-delay:${idx*10}ms">
-      <td class="mono">${item.item}</td>
+    const stepLoad=isLoad&&!item.step1.found&&!item.step2.found;
+    const est=organInfo.estado||'';
+    const stepHtml=stepLoad
+      ?`<div class="analysis-step"><div class="step-header"><span class="step-num">1</span><span class="step-label">Buscando...</span></div><span class="step-na"><span class="spinner spinner-sm"></span></span></div>`
+      :[
+        {num:1,label:'Histórico UASG',d:item.step1},
+        {num:2,label:`Regional ${est}`,d:item.step2},
+        {num:3,label:'Nacional',d:item.step3},
+      ].map(s=>{
+        const cls=s.d.found?'step-ok':'';
+        const body=s.d.found
+          ?`<div class="step-value">${fmtBRL(s.d.preco)}${s.d.n?` <span style="color:var(--muted);font-size:9px">(${s.d.n}x)</span>`:''}</div>${s.d.marca?`<div class="step-marca">${s.d.marca}</div>`:''}`
+          :`<div class="step-na">${isLoad?`<span class="spinner spinner-sm"></span>`:item.catmat?'Nenhum registro':'Produto não mapeado'}</div>`;
+        return`<div class="analysis-step ${cls}"><div class="step-header"><span class="step-num">${s.num}</span><span class="step-label">${s.label}</span></div>${body}</div>`;
+      }).join('');
+
+    return`<tr class="row-anim" style="animation-delay:${Math.min(idx,20)*8}ms">
+      <td class="mono" style="color:var(--muted)">${item.item}</td>
       <td class="desc-cell" title="${item.desc}">${shortDesc}</td>
-      <td class="mono" style="text-align:center">${item.qtd}</td>
-      <td style="color:var(--accent);font-size:11px">${item.marca}</td>
-      <td style="color:var(--muted);font-size:11px">${item.modelo}</td>
+      <td class="mono" style="text-align:center;color:var(--muted)">${item.qtd}</td>
+      <td style="font-size:10px;color:var(--muted)">${item.unidade||'UN'}</td>
+      <td style="font-size:11px;color:var(--accent)">${item.marca}</td>
       <td class="num">${fmtBRL(item.valorTR)}</td>
-      <td class="num">${item.mediaGov ? fmtBRL(item.mediaGov) : '<span style="color:var(--muted)">—</span>'}</td>
-      <td class="num">${diffHtml}</td>
-      <td><span class="badge ${badgeCls}">${badgeText}</span></td>
+      <td class="analysis-cell">${stepHtml}</td>
+      <td style="text-align:center"><div class="score ${scCls}">${scVal}</div></td>
+      <td class="rec-cell"><div class="rec-box ${recCls}"><div class="rec-title">${isLoad?'Analisando...':item.recText||'— Sem dado'}</div><div class="rec-detail">${item.recDetail||''}</div></div></td>
+      <td><button onclick="showDetail(${allItems.indexOf(item)})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px" title="Análise completa">🔍</button></td>
     </tr>`;
   }).join('');
 }
 
-function updateStats() {
-  const ok = allItems.filter(i => i.status === 'ok' || i.status === 'nodata').length;
-  const warn = allItems.filter(i => i.status === 'warn').length;
-  const bad = allItems.filter(i => i.status === 'bad').length;
-  document.getElementById('statOk').textContent = ok;
-  document.getElementById('statWarn').textContent = warn;
-  document.getElementById('statBad').textContent = bad;
+function updateStats(){
+  document.getElementById('sOk').textContent=allItems.filter(i=>i.status==='ok').length;
+  document.getElementById('sWarn').textContent=allItems.filter(i=>i.status==='warn').length;
+  document.getElementById('sBad').textContent=allItems.filter(i=>i.status==='bad').length;
+  document.getElementById('sNd').textContent=allItems.filter(i=>i.status==='nodata'||i.status==='loading').length;
 }
 
-function setFilter(f, btn) {
-  currentFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderTable();
 }
 
-// ── Export ────────────────────────────────────────────────────────────────────
-function showExport() { document.getElementById('exportModal').classList.add('show'); }
-function closeExport() { document.getElementById('exportModal').classList.remove('show'); }
-
-function exportCSV() {
-  const opt = document.querySelector('input[name="exportOpt"]:checked').value;
-  let items = allItems;
-  if (opt === 'ok') items = allItems.filter(i => i.status === 'ok' || i.status === 'nodata');
-  if (opt === 'okwarn') items = allItems.filter(i => i.status !== 'bad');
-
-  // Atualizar valores mínimo e inicial com o TR
-  const header = '"Item","Descrição","Qtd.","Valor Ref.","Marca/Fabricante","Modelo/Versão","Valor Mínimo","Valor Inicial","codigo_licitei","grupo"';
-  const rows = items.map(i =>
-    [i.item, `"${i.desc.replace(/"/g,'""')}"`, i.qtd,
-     `"R$ ${i.valorTR.toFixed(2).replace('.', ',')}"`,
-     `"${i.marca}"`, `"${i.modelo}"`,
-     i.valorTR.toFixed(2).replace('.', ','),
-     i.valorTR.toFixed(2).replace('.', ','),
-     `"${i.codigoLicitei}"`, `"${i.grupo}"`
-    ].join(',')
-  );
-
-  const csv = '\uFEFF' + header + '\n' + rows.join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url;
-  a.download = `proposta_licitei_${items.length}_itens.csv`;
-  a.click(); URL.revokeObjectURL(url);
-  closeExport();
+// ── Detail Modal ──────────────────────────────────────────────────────────────
+function showDetail(idx){
+  const item=allItems[idx];
+  document.getElementById('detailTitle').textContent=`Item ${item.item} — ${item.nomeSimples||item.desc.split('/')[0].trim()}`;
+  document.getElementById('detailDesc').textContent=item.desc;
+  const refStep=item.step1.found?item.step1:item.step2.found?item.step2:item.step3.found?item.step3:null;
+  const steps=[
+    {num:1,title:'Esse órgão já comprou esse produto antes?',
+     body:item.step1.found
+      ?`✅ SIM — ${item.step1.n||''} compra(s) encontrada(s) nessa UASG\nPreço praticado: ${fmtBRL(item.step1.preco)}\nMarca mais acessível: ${item.step1.marca||'—'}`
+      :`❌ NÃO — Nenhum registro encontrado para UASG ${organInfo.uasg}`},
+    {num:2,title:`Outros órgãos no estado (${organInfo.estado}) compraram?`,
+     body:item.step2.found
+      ?`✅ SIM — ${item.step2.n||''} registro(s) no estado ${organInfo.estado}\nPreço mediano regional: ${fmtBRL(item.step2.preco)}\nMarca mais acessível: ${item.step2.marca||'—'}`
+      :`❌ NÃO — Nenhum registro encontrado no estado ${organInfo.estado}`},
+    {num:3,title:'Referência nacional (todos os órgãos do Brasil)',
+     body:item.step3.found
+      ?`✅ ${item.step3.n||''} registro(s) nacionais encontrados\nPreço mediano nacional: ${fmtBRL(item.step3.preco)}\nMarca mais acessível: ${item.step3.marca||'—'}`
+      :`❌ Nenhum registro nacional encontrado`},
+    {num:4,title:'Análise de competitividade do TR',
+     body:item.diff!==null
+      ?`Valor do TR: ${fmtBRL(item.valorTR)}\nMelhor referência: ${fmtBRL(refStep?.preco)}\nDiferença: ${fmtPct(item.diff)}\n\n${item.diff>=0?'✅ TR está ACIMA do mercado — você tem margem de lucro.':'⚠️ TR está ABAIXO do mercado — analise seus custos antes de participar.'}`
+      :'Sem dados para análise de competitividade.'},
+    {num:5,title:'Recomendação final',
+     body:`${item.recText||'—'}\n${item.recDetail||''}\n\nMarca sugerida mais acessível: ${item.marca}`},
+  ];
+  document.getElementById('detailSteps').innerHTML=steps.map(s=>`
+    <div class="detail-step">
+      <div class="detail-step-header">
+        <div class="detail-step-num">${s.num}</div>
+        <div class="detail-step-title">${s.title}</div>
+      </div>
+      <div class="detail-step-body">${s.body}</div>
+    </div>`).join('');
+  document.getElementById('detailModal').classList.add('show');
 }
+function closeDetail(){document.getElementById('detailModal').classList.remove('show')}
 
-function showAlert(msg) {
-  const el = document.getElementById('alertBox');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 4000);
+// ── Export ────────────────────────────────────────────────────────────────────
+function showExport(){document.getElementById('exportModal').classList.add('show')}
+function closeExport(){document.getElementById('exportModal').classList.remove('show')}
+
+function exportCSV(){
+  const opt=document.querySelector('input[name="exp"]:checked').value;
+  let items=allItems;
+  if(opt==='ok_nodata')items=allItems.filter(i=>i.status==='ok'||i.status==='nodata'||i.status==='loading');
+  if(opt==='ok')items=allItems.filter(i=>i.status==='ok');
+  if(opt==='okwarn')items=allItems.filter(i=>i.status!=='bad');
+
+  // Gerar codigo_licitei a partir da UASG + número do pregão
+  const uasg=organInfo.uasg||'000000';
+  const pregaoNum=(organInfo.pregao||'0001/2026').replace('PE ','').replace('/','');
+
+  const header='"Item","Descrição","Qtd.","Valor Ref.","Marca/Fabricante","Modelo/Versão","Valor Mínimo","Valor Inicial","codigo_licitei","grupo"';
+  const rows=items.map((i,idx)=>{
+    const codigo=`${uasg}${pregaoNum.substring(0,8)}_${i.item}`;
+    return[
+      i.item,
+      `"${i.desc.replace(/"/g,'""')}"`,
+      i.qtd,
+      `"R$ ${i.valorTR.toFixed(2).replace('.',',')}"`,
+      `"${(i.marca||'Conforme edital').replace(/"/g,'""')}"`,
+      '"C/EDITAL"',
+      (i.valorTR*0.90).toFixed(2),
+      i.valorTR.toFixed(2),
+      `"${codigo}"`,
+      '""'
+    ].join(',');
+  });
+
+  const csv='\uFEFF'+header+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`proposta_licitei_${organInfo.pregao?.replace(/\//g,'-')||'pregao'}_${items.length}_itens.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  closeExport();
 }
 </script>
 </body>
