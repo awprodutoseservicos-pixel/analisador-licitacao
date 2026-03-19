@@ -3,977 +3,1108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LICIT.AI — Analisador Universal</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>LICIT.AI — Análise Inteligente de Licitações</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1f2d45;--accent:#00d4aa;--accent2:#3b82f6;--warn:#f59e0b;--danger:#ef4444;--success:#10b981;--text:#e2e8f0;--muted:#64748b;--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh}
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
-.logo{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:2px}
-.badge-v{background:rgba(0,212,170,.15);color:var(--accent);border:1px solid rgba(0,212,170,.3);border-radius:12px;padding:2px 10px;font-size:10px;font-weight:600;letter-spacing:1px}
-.header-right{margin-left:auto;font-size:11px;color:var(--muted)}
-.main{max-width:1360px;margin:0 auto;padding:28px 32px}
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* Upload */
-.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--surface);margin-bottom:16px}
-.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(0,212,170,.04)}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
-.upload-zone.done{border-color:var(--success);background:rgba(16,185,129,.05)}
+  :root {
+    --bg: #0a0d12;
+    --surface: #111520;
+    --border: #1e2535;
+    --accent: #00e5a0;
+    --accent2: #0066ff;
+    --warn: #ffb800;
+    --danger: #ff3b5c;
+    --text: #e8eaf0;
+    --muted: #5a6075;
+    --card: #141926;
+  }
 
-/* Organ bar */
-.organ-bar{background:var(--surface);border:1px solid rgba(0,212,170,.25);border-radius:10px;padding:14px 24px;margin-bottom:20px;display:none;gap:0;flex-wrap:wrap;align-items:stretch}
-.organ-bar.show{display:flex}
-.organ-field{display:flex;flex-direction:column;gap:3px;padding:0 24px;border-right:1px solid var(--border)}
-.organ-field:first-child{padding-left:0}
-.organ-field:last-child{border-right:none}
-.organ-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.organ-value{font-size:13px;font-weight:500;color:var(--accent)}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Stats */
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px}
-.stat-label{color:var(--muted);font-size:10px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px}
-.stat-value{font-family:var(--mono);font-size:24px;font-weight:700}
-.c-green{color:var(--success)}.c-yellow{color:var(--warn)}.c-red{color:var(--danger)}.c-blue{color:var(--accent2)}.c-teal{color:var(--accent)}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+  }
 
-/* Progress */
-.progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;display:none}
-.progress-wrap.show{display:block}
-.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.progress-label{font-size:12px;color:var(--muted)}
-.progress-pct{font-family:var(--mono);font-size:12px;color:var(--accent)}
-.progress-track{background:var(--surface2);border-radius:4px;height:5px;overflow:hidden}
-.progress-fill{background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;border-radius:4px;transition:width .4s}
-.progress-item{font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .logo {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+  .logo span { color: var(--text); }
+  .tagline {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
 
-/* Controls */
-.controls{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
-.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-size:12px;font-family:var(--sans);transition:all .15s}
-.filter-btn:hover{border-color:var(--accent);color:var(--accent)}
-.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
-.filter-btn.aw.active{background:var(--warn);border-color:var(--warn);color:#000}
-.filter-btn.ad.active{background:var(--danger);border-color:var(--danger);color:#fff}
-.btn{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:500;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-.btn-primary{background:var(--accent);color:#000}.btn-primary:hover{background:#00f0c0}
-.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+  /* ── Main layout ── */
+  .container { max-width: 1300px; margin: 0 auto; padding: 32px 24px; }
 
-/* Table */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-table{width:100%;border-collapse:collapse;font-size:12px}
-thead{background:var(--surface2)}
-th{padding:11px 12px;text-align:left;font-weight:500;color:var(--muted);font-size:10px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:10px 12px;border-bottom:1px solid rgba(31,45,69,.4);vertical-align:top}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(255,255,255,.012)}
-.mono{font-family:var(--mono);font-size:11px}
-.num{text-align:right;font-family:var(--mono);font-size:11px}
-.desc-cell{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:help}
+  /* ── Drop zone ── */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 52px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .25s;
+    background: var(--card);
+    position: relative;
+    overflow: hidden;
+  }
+  .dropzone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,229,160,.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .dropzone:hover, .dropzone.drag { border-color: var(--accent); }
+  .dropzone.drag { background: rgba(0,229,160,.04); }
+  .drop-icon { font-size: 44px; margin-bottom: 14px; opacity: .7; }
+  .drop-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .drop-sub { color: var(--muted); font-size: 13px; }
+  .drop-sub b { color: var(--accent); }
+  #fileInput { display: none; }
 
-/* Score */
-.score{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;font-family:var(--mono);font-size:13px;font-weight:700;margin:0 auto}
-.sc-a{background:rgba(16,185,129,.18);color:var(--success);border:2px solid rgba(16,185,129,.4)}
-.sc-b{background:rgba(245,158,11,.18);color:var(--warn);border:2px solid rgba(245,158,11,.4)}
-.sc-c{background:rgba(239,68,68,.18);color:var(--danger);border:2px solid rgba(239,68,68,.4)}
-.sc-n{background:rgba(100,116,139,.12);color:var(--muted);border:2px solid rgba(100,116,139,.2)}
+  /* ── Progress ── */
+  .progress-wrap {
+    display: none;
+    margin-top: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .progress-wrap.show { display: block; }
+  .prog-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .prog-label b { color: var(--accent); }
+  .prog-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .prog-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    width: 0%;
+    transition: width .3s ease;
+  }
+  .prog-msg {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
 
-/* Analysis steps */
-.analysis-cell{min-width:220px}
-.analysis-step{margin-bottom:4px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2)}
-.step-header{display:flex;align-items:center;gap:6px;margin-bottom:2px}
-.step-num{font-size:9px;background:rgba(100,116,139,.2);color:var(--muted);border-radius:10px;padding:1px 6px;font-family:var(--mono)}
-.step-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
-.step-value{font-family:var(--mono);font-size:11px;color:var(--text)}
-.step-marca{font-size:10px;color:var(--accent);margin-top:1px}
-.step-na{font-size:10px;color:var(--muted);font-style:italic}
-.step-ok{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05)}
+  /* ── Info cards ── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .info-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .info-card .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .info-card .value { font-size: 14px; font-weight: 600; }
+  .info-card.highlight { border-color: var(--accent); }
+  .info-card.highlight .value { color: var(--accent); }
 
-/* Recommendation */
-.rec-cell{min-width:160px}
-.rec-box{padding:8px 10px;border-radius:8px;border:1px solid}
-.rec-title{font-size:11px;font-weight:600;margin-bottom:3px}
-.rec-detail{font-size:10px;line-height:1.4}
-.rec-participe{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08)}
-.rec-participe .rec-title{color:var(--success)}
-.rec-participe .rec-detail{color:rgba(16,185,129,.7)}
-.rec-verifique{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)}
-.rec-verifique .rec-title{color:var(--warn)}
-.rec-verifique .rec-detail{color:rgba(245,158,11,.7)}
-.rec-evite{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)}
-.rec-evite .rec-title{color:var(--danger)}
-.rec-evite .rec-detail{color:rgba(239,68,68,.7)}
-.rec-aguarde{border-color:var(--border);background:var(--surface2)}
-.rec-aguarde .rec-title{color:var(--muted)}
-.rec-aguarde .rec-detail{color:var(--muted)}
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin: 24px 0 16px;
+    flex-wrap: wrap;
+  }
+  .toolbar-left { flex: 1; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-/* Modals */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
-.overlay.show{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:500px;max-width:92vw;max-height:90vh;overflow-y:auto}
-.modal-lg{width:680px}
-.modal-title{font-size:17px;font-weight:600;margin-bottom:6px}
-.modal-sub{color:var(--muted);font-size:12px;margin-bottom:20px}
-.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-.opt{display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:12px;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;background:var(--surface2);transition:border-color .15s}
-.opt:hover{border-color:var(--accent)}
-.opt.rec{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.3)}
-.opt-title{font-weight:500;font-size:13px}
-.opt-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.rec-tag{font-size:9px;background:rgba(16,185,129,.2);color:var(--success);padding:1px 7px;border-radius:8px;margin-left:6px;font-weight:700;letter-spacing:.5px}
-.detail-step{padding:12px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);margin-bottom:10px}
-.detail-step-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.detail-step-num{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#000;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.detail-step-title{font-size:12px;font-weight:600}
-.detail-step-body{font-size:12px;color:var(--muted);line-height:1.6;padding-left:30px;white-space:pre-line}
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #00ffb3; }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  .btn-danger:hover { background: var(--danger); color: #fff; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
 
-.empty{text-align:center;padding:60px 32px;color:var(--muted)}
-.spinner{display:inline-block;width:10px;height:10px;border:2px solid var(--accent2);border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
-.spinner-sm{width:8px;height:8px;border-width:1.5px}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
-.row-anim{animation:fadeIn .18s ease forwards}
-.alert{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--danger);margin-bottom:16px;display:none}
-.alert.show{display:block}
+  /* ── Filter pills ── */
+  .filter-pills { display: flex; gap: 6px; }
+  .pill {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    transition: all .15s;
+  }
+  .pill.active, .pill:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,229,160,.08); }
+  .pill.all.active { border-color: var(--text); color: var(--text); background: rgba(255,255,255,.05); }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: flex;
+    gap: 20px;
+    padding: 14px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .stat { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .stat-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-green { background: var(--accent); }
+  .dot-yellow { background: var(--warn); }
+  .dot-red { background: var(--danger); }
+  .dot-gray { background: var(--muted); }
+  .stat b { font-weight: 700; }
+
+  /* ── Table ── */
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--surface); }
+  th {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+
+  .item-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .item-desc {
+    font-size: 13px;
+    font-weight: 600;
+    max-width: 280px;
+  }
+  .item-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .price-ref { color: var(--text); }
+  .price-market { color: var(--accent); }
+  .price-none { color: var(--muted); font-size: 11px; }
+
+  /* ── Status badge ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-green { background: rgba(0,229,160,.12); color: var(--accent); border: 1px solid rgba(0,229,160,.25); }
+  .badge-yellow { background: rgba(255,184,0,.10); color: var(--warn); border: 1px solid rgba(255,184,0,.25); }
+  .badge-red { background: rgba(255,59,92,.10); color: var(--danger); border: 1px solid rgba(255,59,92,.25); }
+  .badge-gray { background: rgba(90,96,117,.12); color: var(--muted); border: 1px solid rgba(90,96,117,.25); }
+
+  /* ── Spinning loader ── */
+  .spin {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Detail panel ── */
+  .detail-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    transition: color .15s;
+  }
+  .detail-btn:hover { color: var(--accent); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    max-width: 580px;
+    width: 95%;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .modal-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; }
+  .modal-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .modal-row:last-of-type { border-bottom: none; }
+  .modal-row .k { color: var(--muted); }
+  .modal-row .v { font-weight: 600; text-align: right; max-width: 55%; }
+  .modal-close { float: right; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; margin-top: -4px; }
+
+  /* ── Export modal ── */
+  .export-options { display: grid; gap: 10px; margin-top: 16px; }
+  .export-opt {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: left;
+  }
+  .export-opt:hover { border-color: var(--accent); }
+  .export-opt b { display: block; font-size: 14px; margin-bottom: 4px; }
+  .export-opt span { font-size: 12px; color: var(--muted); }
+  .export-opt.featured { border-color: rgba(0,229,160,.3); background: rgba(0,229,160,.04); }
+  .export-opt.featured b { color: var(--accent); }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: .4; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    header { padding: 14px 16px; }
+    .container { padding: 20px 12px; }
+    .dropzone { padding: 36px 16px; }
+    th, td { padding: 10px 10px; }
+  }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">LICIT.AI</div>
-  <span class="badge-v">UNIVERSAL v4</span>
-  <span style="color:var(--border);margin:0 4px">|</span>
-  <span style="font-size:12px;color:var(--muted)">Lê o Termo de Referência · Qualquer produto · Qualquer órgão</span>
-  <div class="header-right">API Compras.gov.br · SINAPI · Histórico UASG</div>
-</div>
-
-<div class="main">
-
-  <!-- Upload PDF -->
-  <div class="upload-zone" id="uploadZone">
-    <input type="file" accept=".pdf" id="fileInput" onchange="handlePDF(this.files[0])">
-    <div style="font-size:30px;margin-bottom:12px">📄</div>
-    <div style="font-size:17px;font-weight:600;margin-bottom:6px">Arraste o Termo de Referência (PDF) aqui</div>
-    <div style="color:var(--muted);font-size:12px">O sistema extrai automaticamente: UASG, órgão, estado, pregão e todos os itens com valores</div>
+<header>
+  <div>
+    <div class="logo">LICIT<span>.AI</span></div>
+    <div class="tagline">Análise inteligente de licitações federais</div>
   </div>
+</header>
 
-  <div class="alert" id="alertBox"></div>
+<div class="container">
 
-  <!-- Organ bar -->
-  <div class="organ-bar" id="organBar">
-    <div class="organ-field">
-      <div class="organ-label">Órgão Comprador</div>
-      <div class="organ-value" id="oOrgao">—</div>
-    </div>
-    <div class="organ-field">
-      <div class="organ-label">UASG</div>
-      <div class="organ-value" id="oUasg">—</div>
-    </div>
-    <div class="organ-field">
-      <div class="organ-label">Estado</div>
-      <div class="organ-value" id="oEstado">—</div>
-    </div>
-    <div class="organ-field">
-      <div class="organ-label">Pregão</div>
-      <div class="organ-value" id="oPregao">—</div>
-    </div>
-    <div class="organ-field">
-      <div class="organ-label">Total Itens</div>
-      <div class="organ-value" id="oTotal">—</div>
-    </div>
-    <div class="organ-field" style="border-right:none;margin-left:auto">
-      <div class="organ-label">Estratégia</div>
-      <div class="organ-value" style="color:var(--accent2)">Máximo ganho</div>
-    </div>
-  </div>
-
-  <!-- Stats -->
-  <div class="stats" id="statsBox" style="display:none">
-    <div class="stat"><div class="stat-label">Total Itens</div><div class="stat-value c-blue" id="sTotal">0</div></div>
-    <div class="stat"><div class="stat-label">✅ Participe</div><div class="stat-value c-green" id="sOk">0</div></div>
-    <div class="stat"><div class="stat-label">⚠️ Verifique</div><div class="stat-value c-yellow" id="sWarn">0</div></div>
-    <div class="stat"><div class="stat-label">🚫 Evite</div><div class="stat-value c-red" id="sBad">0</div></div>
-    <div class="stat"><div class="stat-label">— Sem Dado</div><div class="stat-value c-teal" id="sNd">0</div></div>
+  <!-- Drop zone -->
+  <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+    <div class="drop-icon">📄</div>
+    <div class="drop-title">Arraste o Termo de Referência (PDF)</div>
+    <div class="drop-sub">ou clique para selecionar · <b>Qualquer órgão · Qualquer produto</b></div>
+    <input type="file" id="fileInput" accept=".pdf">
   </div>
 
   <!-- Progress -->
   <div class="progress-wrap" id="progressWrap">
-    <div class="progress-header">
-      <span class="progress-label" id="progressLabel">Lendo PDF...</span>
-      <span class="progress-pct" id="progressPct">0%</span>
+    <div class="prog-label">
+      <span id="progMsg">Inicializando...</span>
+      <b id="progPct">0%</b>
     </div>
-    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    <div class="progress-item" id="progressItem">Extraindo dados do Termo de Referência...</div>
+    <div class="prog-track"><div class="prog-bar" id="progBar"></div></div>
+    <div class="prog-msg" id="progDetail"></div>
   </div>
 
-  <!-- Controls -->
-  <div class="controls" id="controlsBox" style="display:none">
-    <button class="filter-btn active" onclick="setFilter('all',this)">Todos</button>
-    <button class="filter-btn" onclick="setFilter('ok',this)">✅ Participe</button>
-    <button class="filter-btn aw" onclick="setFilter('warn',this)">⚠️ Verifique</button>
-    <button class="filter-btn ad" onclick="setFilter('bad',this)">🚫 Evite</button>
-    <button class="filter-btn" onclick="setFilter('nd',this)">— Sem dado</button>
-    <button class="btn btn-primary" style="margin-left:auto" onclick="showExport()">⬇ Exportar Proposta</button>
+  <!-- Info cards -->
+  <div class="info-grid" id="infoGrid" style="display:none"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar" style="display:none">
+    <div class="toolbar-left">
+      <div class="filter-pills">
+        <button class="pill all active" onclick="setFilter('all')">Todos</button>
+        <button class="pill" onclick="setFilter('participar')">✅ Participar</button>
+        <button class="pill" onclick="setFilter('verificar')">⚠️ Verificar</button>
+        <button class="pill" onclick="setFilter('evitar')">🚫 Evitar</button>
+        <button class="pill" onclick="setFilter('sem_dado')">— Sem dado</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline" onclick="showExportModal()">⬇ Exportar</button>
+      <button class="btn btn-danger" onclick="resetApp()">✕ Novo</button>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar" id="statsBar" style="display:none">
+    <div class="stat"><div class="stat-dot dot-green"></div> Participar: <b id="cntP">0</b></div>
+    <div class="stat"><div class="stat-dot dot-yellow"></div> Verificar: <b id="cntV">0</b></div>
+    <div class="stat"><div class="stat-dot dot-red"></div> Evitar: <b id="cntE">0</b></div>
+    <div class="stat"><div class="stat-dot dot-gray"></div> Sem dado: <b id="cntS">0</b></div>
+    <div class="stat" style="margin-left:auto;color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace" id="apiStatus"></div>
   </div>
 
   <!-- Table -->
-  <div class="table-wrap" id="tableWrap" style="display:none">
-    <table>
-      <thead>
-        <tr>
-          <th style="width:40px">#</th>
-          <th style="min-width:160px">Descrição</th>
-          <th style="width:50px">Qtd.</th>
-          <th style="width:100px">Unidade</th>
-          <th style="width:100px">Marca Sugerida</th>
-          <th class="num" style="width:90px">Valor TR</th>
-          <th style="min-width:220px">Análise de Mercado</th>
-          <th style="width:65px;text-align:center">Score</th>
-          <th style="min-width:160px">Recomendação</th>
-          <th style="width:36px"></th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-
-  <div class="empty" id="emptyState">
-    <div style="font-size:38px;margin-bottom:12px">📄</div>
-    <div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:6px">Anexe o Termo de Referência em PDF</div>
-    <div style="color:var(--muted);font-size:13px">O sistema lê o PDF, extrai todos os dados e faz a análise completa automaticamente</div>
-  </div>
-
-</div>
-
-<!-- Export Modal -->
-<div class="overlay" id="exportModal">
-  <div class="modal">
-    <div class="modal-title">Exportar Proposta para o Licitei</div>
-    <div class="modal-sub">Todos os itens exportados com o valor do TR. Valor Mínimo = 90% do TR.</div>
-    <label class="opt rec">
-      <input type="radio" name="exp" value="ok_nodata" checked style="margin-top:2px;flex-shrink:0">
-      <div><div class="opt-title" style="color:var(--success)">✅ Participe + Sem Dado <span class="rec-tag">RECOMENDADO</span></div>
-      <div class="opt-sub">Itens favoráveis + sem análise — melhor estratégia</div></div>
-    </label>
-    <label class="opt">
-      <input type="radio" name="exp" value="ok" style="margin-top:2px;flex-shrink:0">
-      <div><div class="opt-title">✅ Somente "Participe"</div>
-      <div class="opt-sub">Apenas itens com mercado confirmado favorável</div></div>
-    </label>
-    <label class="opt">
-      <input type="radio" name="exp" value="okwarn" style="margin-top:2px;flex-shrink:0">
-      <div><div class="opt-title">✅ ⚠️ Participe + Verifique</div>
-      <div class="opt-sub">Exclui somente os de alto risco</div></div>
-    </label>
-    <label class="opt">
-      <input type="radio" name="exp" value="all" style="margin-top:2px;flex-shrink:0">
-      <div><div class="opt-title">Todos os itens</div>
-      <div class="opt-sub">Exporta todos independente da análise</div></div>
-    </label>
-    <div class="modal-btns">
-      <button class="btn btn-secondary" onclick="closeExport()">Cancelar</button>
-      <button class="btn btn-primary" onclick="exportCSV()">⬇ Baixar CSV para Licitei</button>
+  <div id="tableArea" style="display:none">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Descrição</th>
+            <th>Qtd</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Valor TR</th>
+            <th>Mercado (Ata)</th>
+            <th>Análise</th>
+            <th>Recomendação</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
     </div>
+  </div>
+
+  <div class="empty" id="emptyState" style="display:none">
+    <div class="empty-icon">🔍</div>
+    <div>Nenhum item encontrado com este filtro</div>
   </div>
 </div>
 
 <!-- Detail Modal -->
-<div class="overlay" id="detailModal">
-  <div class="modal modal-lg">
-    <div class="modal-title" id="detailTitle">Análise Completa</div>
-    <div class="modal-sub" id="detailDesc"></div>
-    <div id="detailSteps"></div>
-    <div class="modal-btns">
-      <button class="btn btn-secondary" onclick="closeDetail()">Fechar</button>
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
+    <div class="modal-title" id="detailTitle">Detalhes do Item</div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('exportModal')">✕</button>
+    <div class="modal-title">Exportar Planilha para o Licitei</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:4px">Todos os itens exportados com <b style="color:var(--text)">Valor Mínimo = 90% do TR</b> e <b style="color:var(--text)">Valor Inicial = 100% do TR</b></p>
+    <div class="export-options">
+      <div class="export-opt featured" onclick="doExport('participar_semdado')">
+        <b>⭐ Competitivos + Sem Dado</b>
+        <span>Itens com margem confirmada + itens sem histórico (verifique custo depois)</span>
+      </div>
+      <div class="export-opt" onclick="doExport('participar')">
+        <b>✅ Somente Competitivos</b>
+        <span>Apenas itens onde o TR está acima do mercado (maior margem)</span>
+      </div>
+      <div class="export-opt" onclick="doExport('participar_verificar')">
+        <b>✅⚠️ Competitivos + Verificar</b>
+        <span>Exclui apenas os de alto risco (TR abaixo do mercado)</span>
+      </div>
+      <div class="export-opt" onclick="doExport('all')">
+        <b>📋 Todos os itens</b>
+        <span>Exporta tudo independente da recomendação</span>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-// Configurar PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// ──────────────────────────────────────────────
+// CONFIG
+// ──────────────────────────────────────────────
+const WORKER_URL = 'https://licitai.tsb8fqf2hn.workers.dev'
+const BATCH_SIZE = 8
+const TIMEOUT_MS = 6000
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function parseV(s){return parseFloat((s||'').replace(/[^\d,\.]/g,'').replace(',','.'))|| 0}
-function fmtBRL(v){if(!v&&v!==0)return'—';return'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
-function fmtPct(v){if(v===null||v===undefined)return'';return(v>=0?'+':'')+v.toFixed(1)+'%'}
-function median(arr){if(!arr.length)return null;const s=[...arr].sort((a,b)=>a-b);return s[Math.floor(s.length/2)]}
-function showAlert(msg){const el=document.getElementById('alertBox');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),5000)}
+// ──────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────
+let allItems = []
+let currentFilter = 'all'
+let orgInfo = {}
+let analysisComplete = false
 
-// ── CATMAT lookup ─────────────────────────────────────────────────────────────
-const CATMAT_KW=[
-  {kw:['cimento portland','cimento'],c:178},
-  {kw:['areia'],c:2673},
-  {kw:['brita','pedra britada','pedrisco'],c:2672},
-  {kw:['argamassa'],c:5256},
-  {kw:['tijolo','bloco cerâmico','bloco de concreto'],c:10474},
-  {kw:['tinta acrílica'],c:5218},
-  {kw:['tinta esmalte','tinta sintética'],c:5219},
-  {kw:['tinta'],c:5218},
-  {kw:['vergalhão','ferro ca-50','ferro ca-25','aço ca'],c:10481},
-  {kw:['azulejo','porcelanato','revestimento cerâmico'],c:5254},
-  {kw:['impermeabilizante'],c:5228},
-  {kw:['cal hidratada'],c:176},
-  {kw:['lona'],c:5265},
-  {kw:['arame'],c:5275},
-  {kw:['gesso'],c:5280},
-  {kw:['telha'],c:5285},
-  {kw:['tubo ferro galvanizado','tubo galvanizado','cano galvanizado','ferro galvanizado'],c:4730},
-  {kw:['tubo pvc','cano pvc','tubo de pvc','cano soldável'],c:4735},
-  {kw:['tubo cpvc','tubo de cobre','cano de cobre'],c:4736},
-  {kw:['tubo corrugado','tubo flexível','tubo esgoto'],c:4738},
-  {kw:['cotovelo','joelho','luva hidráulica','conexão hidráulica','bucha','niple'],c:4740},
-  {kw:['registro','válvula','torneira','chuveiro','misturador'],c:4745},
-  {kw:['sifão','caixa sifonada','ralo'],c:4750},
-  {kw:['caixa dágua','caixa d\'água','reservatório'],c:4755},
-  {kw:['bomba dágua','bomba d\'água','bomba hidráulica','motobomba'],c:4760},
-  {kw:['calha','rufos'],c:4765},
-  {kw:['mangueira'],c:4770},
-  {kw:['fio elétrico','cabo elétrico','fio de cobre','cabo flexível'],c:4810},
-  {kw:['disjuntor','chave elétrica','disjuntor'],c:4815},
-  {kw:['quadro elétrico','quadro de distribuição'],c:4820},
-  {kw:['tomada','interruptor'],c:4825},
-  {kw:['eletroduto','conduite'],c:4830},
-  {kw:['gerador','grupo gerador'],c:4845},
-  {kw:['ar condicionado','split','climatizador'],c:4890},
-  {kw:['ventilador','exaustor'],c:4895},
-  {kw:['geladeira','refrigerador','freezer'],c:4900},
-  {kw:['micro-ondas','forno'],c:4905},
-  {kw:['bebedouro','purificador'],c:4910},
-  {kw:['lâmpada','luminária','refletor','led'],c:4915},
-  {kw:['cadeira','poltrona'],c:3982},
-  {kw:['mesa','bancada'],c:3985},
-  {kw:['armário','roupeiro','fichário','gaveteiro'],c:3980},
-  {kw:['sofá','divã','longarina'],c:3990},
-  {kw:['estante','prateleira','rack'],c:3987},
-  {kw:['cama','beliche'],c:3991},
-  {kw:['colchão','travesseiro'],c:3992},
-  {kw:['computador','desktop','cpu'],c:2358},
-  {kw:['notebook','laptop'],c:2359},
-  {kw:['monitor','tela','display'],c:2362},
-  {kw:['impressora'],c:2364},
-  {kw:['teclado'],c:2365},
-  {kw:['mouse'],c:2366},
-  {kw:['tablet'],c:2361},
-  {kw:['televisão','tv','televisor'],c:2370},
-  {kw:['câmera','câmara','cftv','câmera de segurança'],c:2380},
-  {kw:['projetor','datashow'],c:2375},
-  {kw:['roteador','switch','access point'],c:2390},
-  {kw:['nobreak','ups'],c:2395},
-  {kw:['papel a4','papel sulfite','resma'],c:5010},
-  {kw:['caneta','marcador'],c:5015},
-  {kw:['grampeador','grampo'],c:5020},
-  {kw:['cartucho','toner','refil'],c:5035},
-  {kw:['detergente'],c:6010},
-  {kw:['desinfetante','hipoclorito','água sanitária'],c:6015},
-  {kw:['sabão','sabonete'],c:6020},
-  {kw:['papel higiênico','papel toalha'],c:6025},
-  {kw:['vassoura','rodo','espanador'],c:6030},
-  {kw:['álcool','álcool gel'],c:6035},
-  {kw:['luva descartável','luva de látex'],c:6040},
-  {kw:['máscara descartável','epi'],c:6045},
-  {kw:['saco de lixo'],c:6055},
-  {kw:['furadeira'],c:7010},
-  {kw:['parafusadeira'],c:7015},
-  {kw:['martelo','marreta'],c:7020},
-  {kw:['chave de fenda','chave philips'],c:7025},
-  {kw:['alicate'],c:7030},
-  {kw:['serra','motosserra'],c:7035},
-  {kw:['escada'],c:7040},
-  {kw:['trena','fita métrica'],c:7045},
-  {kw:['pneu'],c:8010},
-  {kw:['óleo lubrificante','óleo motor'],c:8015},
-  {kw:['bateria automotiva'],c:8020},
-  {kw:['combustível','gasolina','diesel'],c:8030},
-  {kw:['camisa','camiseta','uniforme'],c:9010},
-  {kw:['calça','bermuda'],c:9015},
-  {kw:['bota','sapato','coturno'],c:9020},
-  {kw:['capacete'],c:9025},
-  {kw:['colete'],c:9030},
-  {kw:['café','café torrado'],c:1010},
-  {kw:['açúcar'],c:1015},
-  {kw:['água mineral','galão de água'],c:1020},
-  {kw:['copo descartável'],c:1025},
-  {kw:['extintor'],c:11015},
-  {kw:['gás','glp','botijão'],c:11010},
-];
+// ──────────────────────────────────────────────
+// PDF.js setup
+// ──────────────────────────────────────────────
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
 
-const MARCA_DEFAULT={
-  178:'Votoran',2673:'Areial Nacional',2672:'Pedreira Nacional',5256:'Quartzolit',
-  10474:'Cerâmica Nacional',5218:'Suvinil',5219:'Suvinil',10481:'Gerdau',
-  5254:'Portobello',5228:'Vedacit',176:'Votorantim',5265:'Polysack',5275:'Belgo',
-  4730:'Tigre/Amanco',4735:'Tigre/Amanco',4736:'Tigre/Amanco',4738:'Tigre/Amanco',
-  4740:'Tigre/Amanco',4745:'Docol/Deca',4750:'Tigre/Amanco',4755:'Fortlev',
-  4760:'Schneider/Lepono',4765:'Tigre',4770:'Tigre/Netafim',
-  4810:'Prysmian/Nexans',4815:'Schneider/WEG',4820:'Schneider',4825:'Schneider/Tramontina',
-  4830:'Tigre',4845:'Stemac/Cummins',4890:'Samsung/Elgin',4895:'Mondial/Ventisol',
-  4900:'Electrolux/Brastemp',4905:'LG/Electrolux',4910:'Ibbl/Eletropura',4915:'Osram/Philips',
-  3982:'Cavaletti',3985:'Móveis Domel',3980:'Ind. Nacional',3990:'Estofados Nacional',
-  3987:'Móveis Nacional',3991:'Herval/Castor',3992:'Ortobom',
-  2358:'Dell/HP',2359:'Dell/HP/Lenovo',2362:'Samsung/LG',2364:'HP/Epson',
-  2365:'Microsoft/Logitech',2366:'Logitech',2361:'Samsung',2370:'Samsung/LG',
-  2380:'Intelbras/Hikvision',2375:'Epson/Benq',2390:'TP-Link/Cisco',2395:'APC/SMS',
-  5010:'Chamex',5015:'Bic/Pilot',5020:'Rapid',5035:'HP/Epson original',
-  6010:'Ypê',6015:'Pinho Sol',6020:'Protex',6025:'Scott',6030:'Bettanin',
-  6035:'Rioquímica',6040:'Supermax',6045:'3M',6055:'Descarpack',
-  7010:'Makita/Bosch',7015:'Makita/Dewalt',7020:'Tramontina',7025:'Tramontina',
-  7030:'Tramontina',7035:'Stihl',7040:'Mor',7045:'Stanley',
-  8010:'Bridgestone/Goodyear',8015:'Castrol/Mobil',8020:'Heliar/Moura',8030:'Petrobras',
-  9010:'Ind. Têxtil Nacional',9015:'Ind. Têxtil Nacional',9020:'Vulcabras',
-  9025:'MSA/Plastcor',9030:'Delta Plus',1010:'Pilão/3 Corações',
-  1015:'União',1020:'Crystal/Indaiá',1025:'Copobrás',11015:'Amerex',11010:'Ultragaz',
-};
+// ──────────────────────────────────────────────
+// DRAG & DROP
+// ──────────────────────────────────────────────
+const dz = document.getElementById('dropzone')
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag') })
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'))
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag')
+  const f = e.dataTransfer.files[0]
+  if (f && f.type === 'application/pdf') processPDF(f)
+})
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) processPDF(e.target.files[0])
+})
 
-function getCatmat(desc){
-  const dl=desc.toLowerCase();
-  for(const e of CATMAT_KW)
-    for(const kw of e.kw)
-      if(dl.includes(kw))return e.c;
-  return null;
+// ──────────────────────────────────────────────
+// PROGRESS helpers
+// ──────────────────────────────────────────────
+function prog(pct, msg, detail = '') {
+  document.getElementById('progressWrap').classList.add('show')
+  document.getElementById('progBar').style.width = pct + '%'
+  document.getElementById('progPct').textContent = Math.round(pct) + '%'
+  document.getElementById('progMsg').textContent = msg
+  document.getElementById('progDetail').textContent = detail
 }
 
-// ── Estado ────────────────────────────────────────────────────────────────────
-let allItems=[],currentFilter='all',cache={},organInfo={};
+// ──────────────────────────────────────────────
+// PROCESS PDF
+// ──────────────────────────────────────────────
+async function processPDF(file) {
+  prog(5, 'Carregando PDF...', file.name)
+  dz.style.display = 'none'
 
-// ── Upload PDF ────────────────────────────────────────────────────────────────
-const uz=document.getElementById('uploadZone');
-uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag')});
-uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
-uz.addEventListener('drop',e=>{e.preventDefault();uz.classList.remove('drag');handlePDF(e.dataTransfer.files[0])});
+  const buf = await file.arrayBuffer()
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise
+  const total = pdf.numPages
 
-async function handlePDF(file){
-  if(!file||!file.name.toLowerCase().endsWith('.pdf')){
-    showAlert('Por favor envie um arquivo PDF do Termo de Referência.');
-    return;
+  let fullText = ''
+  for (let i = 1; i <= total; i++) {
+    const page = await pdf.getPage(i)
+    const tc = await page.getTextContent()
+    fullText += tc.items.map(it => it.str).join(' ') + '\n'
+    prog(5 + (i / total) * 30, `Lendo PDF... (${i}/${total} páginas)`, '')
   }
 
-  // Helper unificado de progresso — usado em todas as fases
-  const prog=(pct,label,item)=>{
-    document.getElementById('progressFill').style.width=pct+'%';
-    document.getElementById('progressPct').textContent=Math.round(pct)+'%';
-    if(label)document.getElementById('progressLabel').textContent=label;
-    if(item)document.getElementById('progressItem').textContent=item;
-  };
+  prog(38, 'Identificando órgão e itens...', '')
 
-  document.getElementById('progressWrap').classList.add('show');
-  prog(5,'Lendo PDF...','Carregando arquivo...');
+  // Extrai info do órgão
+  orgInfo = extractOrgInfo(fullText)
 
-  try{
-    const arrayBuffer=await file.arrayBuffer();
-    const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
-    let fullText='';
+  // Extrai itens
+  allItems = extractItems(fullText)
 
-    for(let i=1;i<=pdf.numPages;i++){
-      const page=await pdf.getPage(i);
-      const content=await page.getTextContent();
-      const pageText=content.items.map(item=>item.str).join(' ');
-      fullText+=pageText+'\n';
-      const p=Math.round(5+i/pdf.numPages*30);
-      prog(p,`Lendo PDF... (${i}/${pdf.numPages} páginas)`,`Página ${i} de ${pdf.numPages}`);
-    }
-
-    prog(38,'Identificando itens e valores...','Analisando estrutura do documento...');
-
-    const parsed=parseTR(fullText);
-    if(!parsed.items.length){
-      showAlert('Não foi possível extrair os itens do PDF. Verifique se o PDF não é escaneado ou protegido. O sistema suporta TRs do Compras.gov.br e do modelo CGU/SEGES.');
-      document.getElementById('progressWrap').classList.remove('show');
-      return;
-    }
-
-    organInfo=parsed.organ;
-    allItems=parsed.items;
-
-    uz.classList.add('done');
-    uz.querySelector('div:nth-child(2)').textContent='📄';
-    uz.querySelector('div:nth-child(3)').textContent=`✅ ${file.name}`;
-    uz.querySelector('div:nth-child(4)').textContent=`${allItems.length} itens extraídos — ${organInfo.orgao}`;
-
-    document.getElementById('oOrgao').textContent=organInfo.orgao;
-    document.getElementById('oUasg').textContent=organInfo.uasg||'—';
-    document.getElementById('oEstado').textContent=organInfo.estado+(organInfo.cidade?` / ${organInfo.cidade}`:'');
-    document.getElementById('oPregao').textContent=organInfo.pregao;
-    document.getElementById('oTotal').textContent=allItems.length+' itens';
-    document.getElementById('organBar').classList.add('show');
-    document.getElementById('emptyState').style.display='none';
-    document.getElementById('statsBox').style.display='grid';
-    document.getElementById('controlsBox').style.display='flex';
-    document.getElementById('tableWrap').style.display='block';
-    document.getElementById('sTotal').textContent=allItems.length;
-
-    renderTable();
-    runAnalysis(); // background
-
-  }catch(e){
-    console.error(e);
-    showAlert('Erro ao processar o PDF: '+e.message);
-    document.getElementById('progressWrap').classList.remove('show');
+  if (allItems.length === 0) {
+    alert('Não foi possível identificar itens no PDF. Verifique se é um Termo de Referência válido.')
+    resetApp(); return
   }
+
+  // Atribui marcas sugeridas
+  allItems = allItems.map(item => ({
+    ...item,
+    marca: suggestBrand(item.descricao),
+    modelo: 'C/EDITAL',
+    status: 'analisando',
+    precoMercado: null,
+    nRegistros: 0,
+    fonte: '',
+    analise: ''
+  }))
+
+  prog(42, 'Iniciando análise de atas homologadas...', `${allItems.length} itens · Órgão: ${orgInfo.uf || '?'}`)
+
+  // Mostra tabela imediatamente
+  showInfoCards()
+  renderTable()
+  document.getElementById('toolbar').style.display = 'flex'
+  document.getElementById('statsBar').style.display = 'flex'
+  document.getElementById('tableArea').style.display = 'block'
+
+  // Roda análise em background
+  await runAnalysis()
 }
 
-// ── Parser do TR — suporta DOIS formatos ──────────────────────────────────────
-// Formato A: Compras.gov.br (RelacaoItens) — padrão antigo com "Descrição Detalhada"
-// Formato B: CGU/SEGES padrão — tabela com ITEM | ESPECIFICAÇÃO | CATMAT | UNIDADE | QTD | VALOR
-function parseTR(text){
-  const t=text.replace(/\s+/g,' ');
+// ──────────────────────────────────────────────
+// EXTRACT ORG INFO
+// ──────────────────────────────────────────────
+function extractOrgInfo(text) {
+  const info = { uasg: '', orgao: '', uf: '', pregao: '', cidade: '' }
 
-  // ── Detectar formato ──
-  const isFormatoB=t.includes('Termo de Referência')&&(t.includes('CATMAT')||t.includes('ESPECIFICAÇÃO'));
+  const uasgM = text.match(/UASG[:\s]+(\d{6})/i)
+  if (uasgM) info.uasg = uasgM[1]
 
-  // ── Extrair órgão / UASG ──
-  let uasg='',orgao='',estado='',cidade='',pregao='—';
-
-  if(isFormatoB){
-    // Formato B: "Número do artefato UASG ... 23/2026 120669-BASE AéREA DE SANTA CRUZ"
-    const uasgMatch=t.match(/(\d{6})[- ]+([A-ZÀ-Ú][^\d]+?)(?=\s+(?:GERALDO|Editado|Número|Atualizado|\d{2}\/\d{2}\/\d{4}))/i)
-      || t.match(/UASG\s+(\d{6})/i);
-    if(uasgMatch){
-      uasg=uasgMatch[1].trim();
-      orgao=(uasgMatch[2]||'').trim().replace(/[-]+$/,'').trim();
-    }
-    // Tentar extrair órgão do título
-    if(!orgao||orgao.length<5){
-      const tituloMatch=t.match(/([A-ZÁÉÍÓÚÃÕ][A-ZÁÉÍÓÚÃÕ\s]{5,50})\s+Termo de Referência/i);
-      if(tituloMatch)orgao=tituloMatch[1].trim();
-    }
-    // Número do TR
-    const trMatch=t.match(/Termo de Referência\s+(\d+\/\d+)/i)||t.match(/(\d+\/\d{4})\s+\d{6}/);
-    if(trMatch)pregao=`TR ${trMatch[1]}`;
-    // Estado do endereço de entrega
-    const endMatch=t.match(/endereço\s+([^,\n]+,[^,\n]+[-–]\s*([A-Z]{2}))/i)
-      || t.match(/entregu[ea][rs]?\s+no\s+seguinte\s+endereço\s+([^,]+,\s*([A-Z]{2}))/i)
-      || t.match(/Santa Cruz,\s*Rio de Janeiro[-–\s]*RJ/i);
-    if(endMatch){
-      estado='RJ';cidade='Rio de Janeiro';
-    } else {
-      // Inferir do UASG
-      estado=inferEstadoFromUASG(uasg);
-    }
-  } else {
-    // Formato A: "160122 - 55 BATALHAO DE INFANTARIA"
-    const uasgMatch=t.match(/(\d{6})\s*[-–]\s*([^\d][^|]+?)(?=\s+RELAÇÃO|\s+PREGÃO|\s+\d{6})/i);
-    if(uasgMatch){uasg=uasgMatch[1].trim();orgao=uasgMatch[2].trim();}
-    const pregaoMatch=t.match(/PREG[ÃA]O\s+ELETR[ÔO]NICO\s+N[Oº°]?\s*(\d+\/\d+)/i)||t.match(/PE\s+(\d+\/\d+)/i);
-    if(pregaoMatch)pregao=`PE ${pregaoMatch[1]}`;
-    const localMatch=t.match(/Local de Entrega[^:]*:\s*([^/(]+?)\s*\/\s*([A-Z]{2})/i);
-    if(localMatch){cidade=localMatch[1].trim();estado=localMatch[2].trim();}
-    else estado=inferEstadoFromUASG(uasg);
+  const pregaoPatterns = [
+    /Pregão\s+(?:Eletrônico\s+)?(?:nº|n[o°]|N[o°])[.:\s]*(\d+\/\d+)/i,
+    /PE[:\s]+(\d+\/\d+)/i,
+    /PREGÃO[:\s]+(\d+\/\d+)/i
+  ]
+  for (const p of pregaoPatterns) {
+    const m = text.match(p)
+    if (m) { info.pregao = m[1]; break }
   }
 
-  if(!orgao||orgao.length<3)orgao='Órgão Federal';
+  const ufMap = {
+    'AC': 'AC','AL': 'AL','AP': 'AP','AM': 'AM','BA': 'BA','CE': 'CE',
+    'DF': 'DF','ES': 'ES','GO': 'GO','MA': 'MA','MT': 'MT','MS': 'MS',
+    'MG': 'MG','PA': 'PA','PB': 'PB','PR': 'PR','PE': 'PE','PI': 'PI',
+    'RJ': 'RJ','RN': 'RN','RS': 'RS','RO': 'RO','RR': 'RR','SC': 'SC',
+    'SP': 'SP','SE': 'SE','TO': 'TO'
+  }
 
-  // ── Extrair itens ──
-  const items=[];
+  // Tenta extrair UF de cidades conhecidas ou menção direta
+  const cidadeUF = {
+    'Montes Claros': 'MG', 'Belo Horizonte': 'MG', 'São Paulo': 'SP',
+    'Rio de Janeiro': 'RJ', 'Santa Cruz': 'RJ', 'Brasília': 'DF',
+    'Salvador': 'BA', 'Fortaleza': 'CE', 'Recife': 'PE',
+    'Porto Alegre': 'RS', 'Curitiba': 'PR', 'Manaus': 'AM',
+    'Belém': 'PA', 'Campo Grande': 'MS', 'Cuiabá': 'MT',
+    'Goiânia': 'GO', 'Natal': 'RN', 'João Pessoa': 'PB',
+    'Maceió': 'AL', 'Aracaju': 'SE', 'Macapá': 'AP',
+    'Porto Velho': 'RO', 'Boa Vista': 'RR', 'Palmas': 'TO',
+    'Florianópolis': 'SC', 'Vitória': 'ES', 'Teresina': 'PI',
+    'São Luís': 'MA', 'Rio Branco': 'AC', 'Macaé': 'RJ'
+  }
 
-  if(isFormatoB){
-    // ── Formato B: tabela "ITEM ESPECIFICAÇÃO CATMAT UNIDADE QUANTIDADE VALOR UNITÁRIO VALOR TOTAL" ──
-    // O PDF é convertido para texto linear. Precisamos capturar os blocos de cada linha da tabela.
-    // Padrão típico após extração: "1 TUBO GALVANIZADO... 237056 UN 20 R$ 825,00 R$ 16.500,00"
-    // Mas pode vir fragmentado. Usamos estratégia multi-regex.
+  for (const [cidade, uf] of Object.entries(cidadeUF)) {
+    if (text.includes(cidade)) { info.uf = uf; info.cidade = cidade; break }
+  }
 
-    // Regex principal: número do item + descrição + catmat (6 dígitos) + unidade + qtd + valor
-    // Formato: "N DESCRICAO CATMAT UN QTD R$ X,XX R$ Y"
-    const reB=/\b(\d{1,3})\s+((?:[A-ZÁÉÍÓÚÃÕ"][A-Za-záéíóúãõç,.\-\/"()\d\s]+?)){1,200}\s+(\d{5,6})\s+(UN|M²|M2|KG|L|M³|M3|CX|PC|PAR|MT|RL|EMB|SC|PT|GL|CT|FD|BD|AMP|COM|DZ|GR|KIT|SV|UNID)\s+(\d+(?:[.,]\d+)?)\s+R\$\s*([\d.,]+)/gi;
+  if (!info.uf) {
+    const ufDireto = text.match(/\b(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/)
+    if (ufDireto) info.uf = ufDireto[1]
+  }
 
-    let m;
-    while((m=reB.exec(t))!==null){
-      const num=parseInt(m[1]);
-      if(num<1||num>999)continue;
-      const nome=m[2].replace(/\s+/g,' ').trim();
-      const catmatNum=parseInt(m[3]);
-      const unidade=m[4];
-      const qtd=m[5].replace(',','');
-      const valor=parseV(m[6]);
-      if(!valor||valor<=0)continue;
-      // Evitar duplicatas
-      if(items.find(i=>parseInt(i.item)===num&&Math.abs(i.valorTR-valor)<0.01))continue;
-      const catmat=catmatNum||getCatmat(nome);
-      items.push(makeItem(String(num),nome,qtd,unidade,valor,catmat));
-    }
+  // Nome do órgão — procura por padrões comuns
+  const orgPatterns = [
+    /(?:BASE AÉREA|BATALHÃO|REGIMENTO|GRUPAMENTO|COLÉGIO MILITAR|HOSPITAL MILITAR|COMANDO|SEÇÃO)[^\n]+/i,
+    /UASG[:\s]+\d+\s*[-–]\s*([^\n]+)/i
+  ]
+  for (const p of orgPatterns) {
+    const m = text.match(p)
+    if (m) { info.orgao = m[0].trim().substring(0, 60); break }
+  }
 
-    // Se não encontrou nada, tenta regex mais relaxado sem CATMAT
-    if(items.length<3){
-      // Padrão: número + descrição + unidade + qtd + valor
-      const reRelax=/\b(\d{1,3})\s+((?:[A-ZÁÉÍÓÚÃÕ][A-Za-záéíóúãõç,.\-\/"()\d\s]{5,200}?))\s+(UN|M²|KG|L|M³|CX|PC|PAR|MT|RL|EMB|SC)\s+(\d+)\s+R\$\s*([\d.,]+)/gi;
-      while((m=reRelax.exec(t))!==null){
-        const num=parseInt(m[1]);
-        if(num<1||num>999)continue;
-        const nome=m[2].replace(/\s+/g,' ').trim();
-        const qtd=m[4];
-        const valor=parseV(m[5]);
-        if(!valor)continue;
-        if(items.find(i=>parseInt(i.item)===num))continue;
-        items.push(makeItem(String(num),nome,qtd,m[3],valor,getCatmat(nome)));
+  return info
+}
+
+// ──────────────────────────────────────────────
+// EXTRACT ITEMS from TR text
+// ──────────────────────────────────────────────
+function extractItems(text) {
+  const items = []
+  const seen = new Set()
+
+  // Formato A: tabela com ITEM, CATMAT, DESCRIÇÃO, QTD, UNID, VALOR
+  const patA = /\b(\d{1,3})\s+(\d{5,9})\s+([A-Za-zÀ-ÿ][^\n]{10,120}?)\s+(\d[\d.,]*)\s+(UN|KG|M|M²|M³|CX|PC|L|PAR|JG|RL|DZ|GR|TON|BD|BL|PT|TB|SC|GL|FL|CJ|SV|KIT|UNID|CONJ|VG)\s+R?\$?\s*([\d.,]+)/gi
+
+  let m
+  while ((m = patA.exec(text)) !== null) {
+    const num = parseInt(m[1])
+    if (num < 1 || num > 999) continue
+    const key = `${num}-${m[2]}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const valor = parseFloat(m[6].replace(/\./g, '').replace(',', '.'))
+    if (isNaN(valor) || valor <= 0) continue
+    items.push({
+      num, catmat: m[2], descricao: m[3].trim(),
+      qtd: m[4], unidade: m[5], valor
+    })
+  }
+
+  if (items.length > 3) return items.sort((a, b) => a.num - b.num)
+
+  // Formato B: linhas com item e valor (modelo CGU/SEGES)
+  const lines = text.split('\n')
+  for (const line of lines) {
+    const m2 = line.match(/^\s*(\d{1,3})[.\s]+(.{10,100}?)\s+(\d[\d.,]*)\s+(R\$|R\s*\$)?\s*([\d.,]+)\s*$/)
+    if (!m2) continue
+    const num = parseInt(m2[1])
+    if (num < 1 || num > 999) continue
+    const key = `${num}-${m2[2].trim().substring(0, 20)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const valor = parseFloat(m2[5].replace(/\./g, '').replace(',', '.'))
+    if (isNaN(valor) || valor <= 0) continue
+    const catmatM = m2[2].match(/\b(\d{7,9})\b/)
+    items.push({
+      num, catmat: catmatM ? catmatM[1] : '',
+      descricao: m2[2].replace(/\d{7,9}/, '').trim().substring(0, 100),
+      qtd: m2[3], unidade: 'UN', valor
+    })
+  }
+
+  return items.sort((a, b) => a.num - b.num)
+}
+
+// ──────────────────────────────────────────────
+// BRAND SUGGESTIONS
+// ──────────────────────────────────────────────
+function suggestBrand(desc) {
+  const d = desc.toLowerCase()
+  const brands = [
+    [/(cimento|portland)/,            'Votoran'],
+    [/(argamassa|rejunte)/,           'Quartzolit'],
+    [/(tinta|látex|esmalte|massa corrida)/, 'Suvinil'],
+    [/(impermeabiliz|vedacit|manta asfáltica)/, 'Vedacit'],
+    [/(ferro|vergalhão|arame)/,       'Gerdau'],
+    [/(prego|parafuso|porca|bucha)/,  'Ciser'],
+    [/(tubo|conexão|joelho|cotovelo|registro)/, 'Tigre'],
+    [/(fio|cabo|conduíte|eletroduto)/, 'Prysmian'],
+    [/(disjuntor|quadro|tomada|interruptor)/, 'Schneider'],
+    [/(lâmpada|led|luminária)/,       'Osram'],
+    [/(hidráulica|torneira|válvula|bomba)/, 'Docol'],
+    [/(piso|porcelanato|azulejo|cerâmica)/, 'Portobello'],
+    [/(tijolo|bloco|alvenaria)/,      'Cinexpand'],
+    [/(areia|brita|pedra)/,           'Pedreira Nacional'],
+    [/(cal|caulim)/,                  'Minercal'],
+    [/(madeira|compensado|mdf)/,      'Duratex'],
+    [/(cadeira|mesa|armário|mobili)/, 'Tramontina'],
+    [/(colchão|cama|beliche)/,        'Ortobom'],
+    [/(papel|resma|cartolina)/,       'Chamex'],
+    [/(caneta|lápis|borracha|régua|caderno)/, 'BIC'],
+    [/(detergente|sabão|limpeza|desinfetante)/, 'Ypê'],
+    [/(saco de lixo|lixeira)/,        'Vixsol'],
+    [/(EPI|capacete|óculos|luva|bota)/, 'Carbografite'],
+    [/(extintor|mangueira de incêndio)/, 'Amerex'],
+    [/(computador|notebook|monitor)/, 'Dell'],
+    [/(impressora|toner|cartucho)/,   'HP'],
+    [/(processador|servidor|switch)/, 'Cisco'],
+    [/(café|açúcar|água mineral)/,    'Nestlé'],
+    [/(medicamento|curativo|seringa)/, 'Johnson & Johnson'],
+    [/(veículo|pneu|peça auto)/,      'Pirelli'],
+    [/(uniforme|farda|tecido)/,       'Confecções Militares'],
+    [/(gás|GLP|botijão)/,             'Ultragaz'],
+    [/(ferramenta|chave|martelo|furadeira)/, 'Tramontina'],
+    [/(pincel|rolo|espátula)/,        'Atlas'],
+    [/(lona|cobertura|toldo)/,        'Lonasul'],
+    [/(vidro|espelho|box)/,           'Cebrace'],
+    [/(fita|adesivo|silicone)/,       'Tekbond'],
+  ]
+  for (const [re, brand] of brands) {
+    if (re.test(d)) return brand
+  }
+  return 'Marca Nacional Conforme Edital'
+}
+
+// ──────────────────────────────────────────────
+// ANALYSIS ENGINE
+// ──────────────────────────────────────────────
+async function runAnalysis() {
+  // Agrupa CATMATs únicos
+  const catmats = [...new Set(allItems.map(i => i.catmat).filter(Boolean))]
+  const cache = {}
+  const total = catmats.length
+  let done = 0
+
+  // Filtra data de corte (6 meses)
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - 6)
+
+  // Processa em lotes
+  for (let i = 0; i < catmats.length; i += BATCH_SIZE) {
+    const batch = catmats.slice(i, i + BATCH_SIZE)
+    await Promise.all(batch.map(async (catmat) => {
+      try {
+        const result = await fetchCatmat(catmat, orgInfo.uf, cutoff)
+        cache[catmat] = result
+      } catch {
+        cache[catmat] = { regional: null, nacional: null, nReg: 0 }
       }
+      done++
+      prog(42 + (done / total) * 55,
+        `Consultando atas homologadas... (${done}/${total})`,
+        `CATMAT ${catmat} · UF: ${orgInfo.uf || 'N/A'}`)
+
+      // Atualiza itens com este catmat em tempo real
+      allItems = allItems.map(item => {
+        if (item.catmat !== catmat) return item
+        const d = cache[catmat]
+        return computeScore(item, d)
+      })
+      updateStats()
+      renderTable()
+    }))
+  }
+
+  // Itens sem CATMAT — status sem_dado + Participar
+  allItems = allItems.map(item => {
+    if (item.status !== 'analisando') return item
+    return { ...item, status: 'sem_dado', analise: 'Sem CATMAT — verifique custo', recomendacao: 'Participar' }
+  })
+
+  analysisComplete = true
+  prog(100, '✅ Análise concluída!', `${allItems.length} itens analisados`)
+  setTimeout(() => {
+    document.getElementById('progressWrap').classList.remove('show')
+  }, 2000)
+
+  updateStats()
+  renderTable()
+  document.getElementById('apiStatus').textContent = `${done} CATMATs consultados · Atas dos últimos 6 meses`
+}
+
+async function fetchCatmat(catmat, uf, cutoff) {
+  if (!catmat) return { regional: null, nacional: null, nReg: 0 }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+  try {
+    // Busca dados nacionais (e filtra por UF localmente)
+    const url = `${WORKER_URL}?catmat=${catmat}&tipo=ata`
+    const res = await fetch(url, { signal: controller.signal })
+    clearTimeout(timer)
+    if (!res.ok) return { regional: null, nacional: null, nReg: 0 }
+    const data = await res.json()
+    const registros = data.resultado || []
+
+    // Filtra últimos 6 meses
+    const recentes = registros.filter(r => {
+      const dt = new Date(r.dataAssinatura || r.dataInclusao || '2000-01-01')
+      return dt >= cutoff
+    })
+
+    const todos = recentes.length > 0 ? recentes : registros
+
+    const getPreco = r => parseFloat(
+      (r.valorUnitario || r.precoUnitario || r.valorItem || '0')
+        .toString().replace(',', '.')
+    )
+
+    // Preços regionais
+    const regionais = uf ? todos.filter(r =>
+      (r.ufOrgao || r.siglaUf || '').toUpperCase() === uf.toUpperCase()
+    ) : []
+
+    const precosReg = regionais.map(getPreco).filter(v => v > 0)
+    const precosNac = todos.map(getPreco).filter(v => v > 0)
+
+    const median = arr => {
+      if (!arr.length) return null
+      const s = [...arr].sort((a, b) => a - b)
+      const mid = Math.floor(s.length / 2)
+      return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2
     }
 
+    return {
+      regional: precosReg.length >= 3 ? median(precosReg) : null,
+      nacional: precosNac.length > 0 ? median(precosNac) : null,
+      nReg: precosReg.length,
+      nNac: precosNac.length
+    }
+  } catch {
+    clearTimeout(timer)
+    return { regional: null, nacional: null, nReg: 0 }
+  }
+}
+
+function computeScore(item, data) {
+  const ref = data.regional || data.nacional
+
+  if (ref === null || ref === 0) {
+    return {
+      ...item,
+      status: 'sem_dado',
+      precoMercado: null,
+      nRegistros: 0,
+      analise: 'Sem histórico de atas',
+      recomendacao: 'Participar',
+      percDiff: null,
+      fonte: ''
+    }
+  }
+
+  const tr = item.valor
+  const diff = ((tr - ref) / ref) * 100
+  const fonte = data.regional ? `Regional (${orgInfo.uf})` : 'Nacional'
+  const nReg = data.regional ? data.nReg : (data.nNac || 0)
+
+  let status, recomendacao, analise
+
+  if (diff >= 15) {
+    status = 'participar'
+    recomendacao = `Participar — TR ${diff.toFixed(1)}% acima do mercado`
+    analise = `✅ TR acima das atas homologadas (${fonte})`
+  } else if (diff >= -5) {
+    status = 'verificar'
+    recomendacao = `Verificar — TR compatível com mercado`
+    analise = `⚠️ TR próximo das atas homologadas (${fonte})`
+  } else if (diff >= -20) {
+    status = 'verificar'
+    recomendacao = `Verificar — TR ${Math.abs(diff).toFixed(1)}% abaixo do mercado`
+    analise = `⚠️ TR ligeiramente abaixo das atas (${fonte})`
   } else {
-    // ── Formato A: Compras.gov.br com "Descrição Detalhada" ──
-    const reA=/(\d+)\s*[-–]\s*([^\n]+?)\s+Descrição Detalhada\s*:\s*([\s\S]*?)Valor Unitário \(R\$\)\s*:\s*([\d.,]+)\s+Unidade de Fornecimento\s*:\s*([^\n]+?)\s+Quantidade\s+(?:Total|Mínima Cotada)\s*:\s*(\d+)/gi;
-    let m;
-    while((m=reA.exec(t))!==null){
-      const nome=m[2].trim();
-      const descDetalhada=m[3].replace(/Tratamento Diferenciado[\s\S]*$/,'').trim();
-      const valor=parseV(m[4]);
-      if(!valor)continue;
-      const catmat=getCatmat(nome+' '+descDetalhada);
-      const desc=`${nome} / ${descDetalhada}`.replace(/\s+/g,' ');
-      items.push(makeItem(m[1],desc,m[6],m[5].trim(),valor,catmat,nome));
-    }
-    // Fallback formato A
-    if(!items.length){
-      const reFallback=/(\d+)\s*[-–]\s*([^\n]+?)\n[\s\S]*?Valor Unitário \(R\$\)\s*:\s*([\d.,]+)\s*\n[\s\S]*?Quantidade Total\s*:\s*(\d+)/gi;
-      while((m=reFallback.exec(t))!==null){
-        const valor=parseV(m[3]);
-        if(!valor)continue;
-        const nome=m[2].trim();
-        items.push(makeItem(m[1],nome,m[4],'UN',valor,getCatmat(nome)));
-      }
-    }
+    status = 'evitar'
+    recomendacao = `Evitar — TR ${Math.abs(diff).toFixed(1)}% abaixo do mercado`
+    analise = `🚫 Risco de inexequibilidade (${fonte})`
   }
 
-  return{
-    organ:{uasg,orgao,estado,cidade,pregao},
-    items,
-  };
+  return { ...item, status, precoMercado: ref, nRegistros: nReg, analise, recomendacao, percDiff: diff, fonte }
 }
 
-function makeItem(num,desc,qtd,unidade,valorTR,catmat,nomeSimples){
-  return{
-    item:num,
-    desc:desc.substring(0,400),
-    nomeSimples:(nomeSimples||desc).substring(0,80),
-    qtd:String(qtd).replace(/[.,]\d+$/,''),
-    unidade:unidade||'UN',
-    valorTR,
-    catmat,
-    marca:MARCA_DEFAULT[catmat]||'Conforme edital',
-    modelo:'C/EDITAL',
-    codigoLicitei:'',grupo:'',
-    step1:{found:false},step2:{found:false},step3:{found:false},
-    status:'loading',score:null,diff:null,recText:'',recDetail:'',
-  };
+// ──────────────────────────────────────────────
+// RENDER
+// ──────────────────────────────────────────────
+function showInfoCards() {
+  const grid = document.getElementById('infoGrid')
+  grid.style.display = 'grid'
+  grid.innerHTML = `
+    <div class="info-card highlight">
+      <div class="label">Órgão</div>
+      <div class="value">${orgInfo.orgao || 'Detectando...'}</div>
+    </div>
+    <div class="info-card">
+      <div class="label">UASG</div>
+      <div class="value">${orgInfo.uasg || '—'}</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Pregão</div>
+      <div class="value">${orgInfo.pregao || '—'}</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Estado</div>
+      <div class="value">${orgInfo.uf ? `${orgInfo.uf}${orgInfo.cidade ? ` · ${orgInfo.cidade}` : ''}` : '—'}</div>
+    </div>
+    <div class="info-card">
+      <div class="label">Total de Itens</div>
+      <div class="value">${allItems.length}</div>
+    </div>
+  `
 }
 
-function inferEstadoFromUASG(uasg){
-  if(!uasg)return'DF';
-  const p2=uasg.substring(0,2);
-  const map={'16':'MG','12':'AC','13':'AM','15':'PA','21':'MA','22':'PI','23':'CE',
-    '24':'RN','25':'PB','26':'PE','27':'AL','28':'SE','29':'BA','31':'MG',
-    '32':'ES','33':'RJ','35':'SP','41':'PR','42':'SC','43':'RS',
-    '50':'MS','51':'MT','52':'GO','53':'DF','11':'DF','12':'RJ'};
-  return map[p2]||'DF';
+function updateStats() {
+  const counts = { participar: 0, verificar: 0, evitar: 0, sem_dado: 0, analisando: 0 }
+  allItems.forEach(i => { if (counts[i.status] !== undefined) counts[i.status]++ })
+  document.getElementById('cntP').textContent = counts.participar
+  document.getElementById('cntV').textContent = counts.verificar
+  document.getElementById('cntE').textContent = counts.evitar
+  document.getElementById('cntS').textContent = counts.sem_dado + counts.analisando
 }
 
-// ── Análise ───────────────────────────────────────────────────────────────────
-async function runAnalysis(){
-  const {estado}=organInfo;
+function setFilter(f) {
+  currentFilter = f
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'))
+  event.target.classList.add('active')
+  renderTable()
+}
 
-  // Mostrar tabela imediatamente com "Participe por padrão"
-  for(const item of allItems){calcScore(item);}
-  renderTable();updateStats();
+function renderTable() {
+  const filtered = allItems.filter(item => {
+    if (currentFilter === 'all') return true
+    return item.status === currentFilter
+  })
 
-  // CATMATs únicos — itens repetidos usam cache automaticamente
-  const catmatsUnicos=[...new Set(allItems.filter(i=>i.catmat).map(i=>i.catmat))];
-  const total=catmatsUnicos.length||1;
+  const tbody = document.getElementById('tableBody')
+  const empty = document.getElementById('emptyState')
 
-  // Helper de progresso da análise — escala de 42% a 98%
-  let done=0;
-  const updProg=()=>{
-    const p=42+Math.round(done/total*56);
-    document.getElementById('progressFill').style.width=p+'%';
-    document.getElementById('progressPct').textContent=p+'%';
-    document.getElementById('progressLabel').textContent=
-      `Consultando base do governo... (${done}/${total} produtos)`;
-    document.getElementById('progressItem').textContent=
-      done===0?'Iniciando consultas...':`${done} de ${total} produtos consultados`;
-  };
-  updProg(); // mostra 42% imediatamente ao começar
-
-  // Lotes de 10 em paralelo — cada item atualiza ao terminar
-  const LOTE=10;
-  for(let i=0;i<catmatsUnicos.length;i+=LOTE){
-    const lote=catmatsUnicos.slice(i,i+LOTE);
-    await Promise.all(lote.map(async catmat=>{
-      await fetchUnico(catmat,estado);
-      done++;
-      updProg();
-      for(const item of allItems) calcScore(item);
-      renderTable();updateStats();
-    }));
+  if (filtered.length === 0) {
+    tbody.innerHTML = ''
+    empty.style.display = 'block'
+    return
   }
+  empty.style.display = 'none'
 
-  document.getElementById('progressFill').style.width='100%';
-  document.getElementById('progressPct').textContent='100%';
-  document.getElementById('progressLabel').textContent=`✓ Análise completa — ${allItems.length} itens`;
-  document.getElementById('progressItem').textContent='Pronto para exportar!';
-  for(const item of allItems) calcScore(item);
-  renderTable();updateStats();
-  setTimeout(()=>document.getElementById('progressWrap').classList.remove('show'),2000);
-}
-
-// ── Atas de Registro de Preços homologadas via Cloudflare Worker ──────────
-// Worker próprio = sem CORS, sem proxy instável, chamada direta à API do governo
-// Troque WORKER_URL pela URL do seu Worker após o deploy
-
-const WORKER_URL='https://mflicita.awprodutoseservicos.workers.dev';
-
-async function fetchUnico(catmat,estado){
-  const keyReg=`reg_${catmat}_${estado}`;
-  const keyNac=`nac_${catmat}`;
-  if(cache[keyReg]!==undefined&&cache[keyNac]!==undefined)return;
-
-  const limite=new Date();limite.setMonth(limite.getMonth()-6);
-
-  const fetchAta=async(key,uf)=>{
-    if(cache[key]!==undefined)return;
-    try{
-      // Chama o Worker próprio — sem CORS, sem proxy terceiro
-      let url=`${WORKER_URL}?catmat=${catmat}&tipo=ata`;
-      if(uf)url+=`&uf=${uf}`;
-
-      const res=await fetch(url,{signal:AbortSignal.timeout(8000)});
-      if(!res.ok)throw new Error('bad');
-      const data=await res.json();
-
-      cache[key]=(data.resultado||[])
-        .filter(r=>{
-          const v=parseFloat(r.valorUnitario||r.precoUnitario||0);
-          return v>0&&v<1e7;
-        })
-        .filter(r=>{
-          const dt=r.dataAssinatura||r.dataResultado||'';
-          return !dt||new Date(dt)>=limite;
-        })
-        .map(r=>({
-          preco:parseFloat(r.valorUnitario||r.precoUnitario),
-          marca:(r.marca||r.marcaFabricante||'').trim(),
-          uf:(r.ufOrgao||'').trim().toUpperCase(),
-          orgao:(r.nomeOrgao||'').trim(),
-          ata:r.numeroAta||'',
-          data:r.dataAssinatura||r.dataResultado||''
-        }));
-    }catch{
-      cache[key]=[];
-    }
-  };
-
-  // Regional (com UF) e nacional (sem UF) em paralelo
-  await Promise.all([
-    fetchAta(keyReg,estado),
-    fetchAta(keyNac,null),
-  ]);
-}
-
-// Compatibilidade
-async function fetchPrices(catmat,estado,uasg){return[];}
-async function fetchAPI(catmat,estado,uasg){return[];}
-
-function getBestMarca(results){
-  if(!results||!results.length)return null;
-  const comMarca=results.filter(r=>r.marca&&r.marca.length>2&&!r.marca.match(/^(sem|s\/|n\/a|nao|não)/i));
-  if(!comMarca.length)return null;
-  return [...comMarca].sort((a,b)=>a.preco-b.preco)[0].marca;
-}
-
-function calcScore(item){
-  const estado=organInfo.estado||'';
-  const keyReg=`reg_${item.catmat}_${estado}`;
-  const keyNac=`nac_${item.catmat}`;
-  const reg=cache[keyReg]||[];
-  const nac=cache[keyNac]||[];
-
-  // Referência: regional se tiver dados suficientes (≥3), senão nacional
-  const refDados=reg.length>=3?reg:nac.length?nac:null;
-
-  // Preencher steps para exibição na tabela
-  if(reg.length){
-    item.step2={found:true,preco:median(reg.map(r=>r.preco)),marca:getBestMarca(reg)||MARCA_DEFAULT[item.catmat],n:reg.length};
-    item.marca=item.step2.marca||item.marca;
-  }
-  if(nac.length){
-    item.step3={found:true,preco:median(nac.map(r=>r.preco)),marca:getBestMarca(nac)||MARCA_DEFAULT[item.catmat],n:nac.length};
-    if(!reg.length)item.marca=item.step3.marca||item.marca;
-  }
-
-  const ref=reg.length>=3?item.step2:nac.length?item.step3:null;
-
-  if(!ref||!refDados){
-    // SEM HISTÓRICO → Participe por padrão
-    item.status='ok';item.score=7;item.diff=null;
-    item.recText='✓ Participe';
-    item.recDetail='Sem histórico na base — TR usado como referência. Verifique seu custo antes de ofertar.';
-    return;
-  }
-
-  const diff=((item.valorTR-ref.preco)/ref.preco)*100;
-  item.diff=diff;
-  let score;
-  if(diff>=25)score=9;
-  else if(diff>=10)score=8;
-  else if(diff>=0)score=7;
-  else if(diff>=-10)score=6;
-  else if(diff>=-20)score=4;
-  else if(diff>=-30)score=2;
-  else score=1;
-  item.score=score;
-  item.status=score>=7?'ok':score>=4?'warn':'bad';
-  if(score>=7){item.recText='✓ Participe';item.recDetail=`TR ${fmtPct(diff)} acima do mercado — boa margem`;}
-  else if(score>=4){item.recText='⚠ Verifique';item.recDetail=`TR ${fmtPct(diff)} — analise seus custos`;}
-  else{item.recText='✕ Evite';item.recDetail=`TR ${fmtPct(diff)} — abaixo do mercado, risco alto`;}
-}
-
-// ── Render ────────────────────────────────────────────────────────────────────
-function renderTable(){
-  const body=document.getElementById('tableBody');
-  const filtered=allItems.filter(item=>{
-    if(currentFilter==='all')return true;
-    if(currentFilter==='ok')return item.status==='ok';
-    if(currentFilter==='warn')return item.status==='warn';
-    if(currentFilter==='bad')return item.status==='bad';
-    if(currentFilter==='nd')return item.status==='nodata'||item.status==='loading';
-    return true;
-  });
-
-  body.innerHTML=filtered.map((item,idx)=>{
-    const shortDesc=item.nomeSimples||item.desc.split('/')[0].trim();
-    const isLoad=item.status==='loading';
-    let scCls='sc-n',scVal='—';
-    if(isLoad)scVal=`<span class="spinner spinner-sm"></span>`;
-    else if(item.score!==null){scVal=item.score;scCls=item.score>=7?'sc-a':item.score>=4?'sc-b':'sc-c';}
-
-    let recCls='rec-aguarde';
-    if(!isLoad){
-      if(item.status==='ok')recCls='rec-participe';
-      else if(item.status==='warn')recCls='rec-verifique';
-      else if(item.status==='bad')recCls='rec-evite';
+  tbody.innerHTML = filtered.map(item => {
+    const badgeMap = {
+      participar: '<span class="badge badge-green">✅ Participar</span>',
+      verificar:  '<span class="badge badge-yellow">⚠️ Verificar</span>',
+      evitar:     '<span class="badge badge-red">🚫 Evitar</span>',
+      sem_dado:   '<span class="badge badge-gray">— Sem dado</span>',
+      analisando: '<span class="badge badge-gray"><span class="spin"></span> Analisando</span>'
     }
 
-    const stepLoad=isLoad&&!item.step1.found&&!item.step2.found;
-    const est=organInfo.estado||'';
-    const stepHtml=stepLoad
-      ?`<div class="analysis-step"><div class="step-header"><span class="step-num">1</span><span class="step-label">Buscando...</span></div><span class="step-na"><span class="spinner spinner-sm"></span></span></div>`
-      :[
-        {num:1,label:'Histórico UASG',d:item.step1},
-        {num:2,label:`Regional ${est}`,d:item.step2},
-        {num:3,label:'Nacional',d:item.step3},
-      ].map(s=>{
-        const cls=s.d.found?'step-ok':'';
-        const body=s.d.found
-          ?`<div class="step-value">${fmtBRL(s.d.preco)}${s.d.n?` <span style="color:var(--muted);font-size:9px">(${s.d.n}x)</span>`:''}</div>${s.d.marca?`<div class="step-marca">${s.d.marca}</div>`:''}`
-          :`<div class="step-na">${isLoad?`<span class="spinner spinner-sm"></span>`:item.catmat?'Nenhum registro':'Produto não mapeado'}</div>`;
-        return`<div class="analysis-step ${cls}"><div class="step-header"><span class="step-num">${s.num}</span><span class="step-label">${s.label}</span></div>${body}</div>`;
-      }).join('');
+    const fmtBRL = v => v != null ? 'R$ ' + v.toFixed(2).replace('.', ',') : null
+    const percStr = item.percDiff != null
+      ? `<span style="color:${item.percDiff >= 0 ? 'var(--accent)' : 'var(--danger)'}">
+           ${item.percDiff >= 0 ? '+' : ''}${item.percDiff.toFixed(1)}%
+         </span>` : '<span class="price-none">—</span>'
 
-    return`<tr class="row-anim" style="animation-delay:${Math.min(idx,20)*8}ms">
-      <td class="mono" style="color:var(--muted)">${item.item}</td>
-      <td class="desc-cell" title="${item.desc}">${shortDesc}</td>
-      <td class="mono" style="text-align:center;color:var(--muted)">${item.qtd}</td>
-      <td style="font-size:10px;color:var(--muted)">${item.unidade||'UN'}</td>
-      <td style="font-size:11px;color:var(--accent)">${item.marca}</td>
-      <td class="num">${fmtBRL(item.valorTR)}</td>
-      <td class="analysis-cell">${stepHtml}</td>
-      <td style="text-align:center"><div class="score ${scCls}">${scVal}</div></td>
-      <td class="rec-cell"><div class="rec-box ${recCls}"><div class="rec-title">${isLoad?'Analisando...':item.recText||'— Sem dado'}</div><div class="rec-detail">${item.recDetail||''}</div></div></td>
-      <td><button onclick="showDetail(${allItems.indexOf(item)})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px" title="Análise completa">🔍</button></td>
-    </tr>`;
-  }).join('');
+    return `<tr>
+      <td class="item-num">${item.num}</td>
+      <td>
+        <div class="item-desc">${item.descricao.substring(0, 70)}${item.descricao.length > 70 ? '…' : ''}</div>
+        <div class="item-sub">${item.catmat ? 'CATMAT ' + item.catmat : 'Sem CATMAT'} · ${item.unidade || 'UN'}</div>
+      </td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:12px">${item.qtd}</td>
+      <td style="font-size:12px;max-width:120px">${item.marca || '—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${item.modelo || 'C/EDITAL'}</td>
+      <td><span class="price price-ref">${fmtBRL(item.valor) || '—'}</span></td>
+      <td>
+        ${item.precoMercado
+          ? `<span class="price price-market">${fmtBRL(item.precoMercado)}</span>
+             <div style="font-size:10px;color:var(--muted);margin-top:2px">${item.nRegistros} ata${item.nRegistros !== 1 ? 's' : ''} · ${item.fonte || ''}</div>`
+          : '<span class="price-none">Sem ata</span>'}
+      </td>
+      <td>${percStr}</td>
+      <td>${badgeMap[item.status] || ''}</td>
+      <td>
+        <button class="detail-btn" onclick="showDetail(${item.num})">🔍</button>
+      </td>
+    </tr>`
+  }).join('')
 }
 
-function updateStats(){
-  document.getElementById('sOk').textContent=allItems.filter(i=>i.status==='ok').length;
-  document.getElementById('sWarn').textContent=allItems.filter(i=>i.status==='warn').length;
-  document.getElementById('sBad').textContent=allItems.filter(i=>i.status==='bad').length;
-  document.getElementById('sNd').textContent=allItems.filter(i=>i.status==='nodata'||i.status==='loading').length;
+// ──────────────────────────────────────────────
+// MODALS
+// ──────────────────────────────────────────────
+function showDetail(num) {
+  const item = allItems.find(i => i.num === num)
+  if (!item) return
+  document.getElementById('detailTitle').textContent = `Item ${item.num} — ${item.descricao.substring(0, 50)}`
+  document.getElementById('detailBody').innerHTML = `
+    <div class="modal-row"><span class="k">Descrição completa</span><span class="v">${item.descricao}</span></div>
+    <div class="modal-row"><span class="k">CATMAT</span><span class="v">${item.catmat || 'Não informado'}</span></div>
+    <div class="modal-row"><span class="k">Quantidade</span><span class="v">${item.qtd} ${item.unidade || ''}</span></div>
+    <div class="modal-row"><span class="k">Valor do TR</span><span class="v" style="color:var(--text)">R$ ${item.valor?.toFixed(2).replace('.', ',') || '—'}</span></div>
+    <div class="modal-row"><span class="k">Preço Ata Homologada</span><span class="v" style="color:var(--accent)">${item.precoMercado ? 'R$ ' + item.precoMercado.toFixed(2).replace('.', ',') : 'Sem dado'}</span></div>
+    <div class="modal-row"><span class="k">Diferença TR vs Mercado</span><span class="v" style="color:${(item.percDiff||0) >= 0 ? 'var(--accent)' : 'var(--danger)'}">${item.percDiff != null ? (item.percDiff >= 0 ? '+' : '') + item.percDiff.toFixed(2) + '%' : '—'}</span></div>
+    <div class="modal-row"><span class="k">Nº de atas consultadas</span><span class="v">${item.nRegistros || 0}</span></div>
+    <div class="modal-row"><span class="k">Fonte dos dados</span><span class="v">${item.fonte || 'Sem dado'}</span></div>
+    <div class="modal-row"><span class="k">Análise</span><span class="v">${item.analise || '—'}</span></div>
+    <div class="modal-row"><span class="k">Recomendação</span><span class="v">${item.recomendacao || '—'}</span></div>
+    <div class="modal-row"><span class="k">Marca sugerida</span><span class="v">${item.marca || '—'}</span></div>
+    <div class="modal-row"><span class="k">Modelo</span><span class="v">${item.modelo || 'C/EDITAL'}</span></div>
+    <div class="modal-row"><span class="k">Valor Mínimo (Licitei)</span><span class="v">R$ ${(item.valor * 0.9).toFixed(2).replace('.', ',')}</span></div>
+    <div class="modal-row"><span class="k">Valor Inicial (Licitei)</span><span class="v">R$ ${item.valor?.toFixed(2).replace('.', ',') || '—'}</span></div>
+  `
+  document.getElementById('detailModal').classList.add('show')
 }
 
-function setFilter(f,btn){
-  currentFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderTable();
+function showExportModal() {
+  document.getElementById('exportModal').classList.add('show')
 }
 
-// ── Detail Modal ──────────────────────────────────────────────────────────────
-function showDetail(idx){
-  const item=allItems[idx];
-  document.getElementById('detailTitle').textContent=`Item ${item.item} — ${item.nomeSimples||item.desc.split('/')[0].trim()}`;
-  document.getElementById('detailDesc').textContent=item.desc;
-  const refStep=item.step1.found?item.step1:item.step2.found?item.step2:item.step3.found?item.step3:null;
-  const steps=[
-    {num:1,title:'Esse órgão já comprou esse produto antes?',
-     body:item.step1.found
-      ?`✅ SIM — ${item.step1.n||''} compra(s) encontrada(s) nessa UASG\nPreço praticado: ${fmtBRL(item.step1.preco)}\nMarca mais acessível: ${item.step1.marca||'—'}`
-      :`❌ NÃO — Nenhum registro encontrado para UASG ${organInfo.uasg}`},
-    {num:2,title:`Outros órgãos no estado (${organInfo.estado}) compraram?`,
-     body:item.step2.found
-      ?`✅ SIM — ${item.step2.n||''} registro(s) no estado ${organInfo.estado}\nPreço mediano regional: ${fmtBRL(item.step2.preco)}\nMarca mais acessível: ${item.step2.marca||'—'}`
-      :`❌ NÃO — Nenhum registro encontrado no estado ${organInfo.estado}`},
-    {num:3,title:'Referência nacional (todos os órgãos do Brasil)',
-     body:item.step3.found
-      ?`✅ ${item.step3.n||''} registro(s) nacionais encontrados\nPreço mediano nacional: ${fmtBRL(item.step3.preco)}\nMarca mais acessível: ${item.step3.marca||'—'}`
-      :`❌ Nenhum registro nacional encontrado`},
-    {num:4,title:'Análise de competitividade do TR',
-     body:item.diff!==null
-      ?`Valor do TR: ${fmtBRL(item.valorTR)}\nMelhor referência: ${fmtBRL(refStep?.preco)}\nDiferença: ${fmtPct(item.diff)}\n\n${item.diff>=0?'✅ TR está ACIMA do mercado — você tem margem de lucro.':'⚠️ TR está ABAIXO do mercado — analise seus custos antes de participar.'}`
-      :'Sem dados para análise de competitividade.'},
-    {num:5,title:'Recomendação final',
-     body:`${item.recText||'—'}\n${item.recDetail||''}\n\nMarca sugerida mais acessível: ${item.marca}`},
-  ];
-  document.getElementById('detailSteps').innerHTML=steps.map(s=>`
-    <div class="detail-step">
-      <div class="detail-step-header">
-        <div class="detail-step-num">${s.num}</div>
-        <div class="detail-step-title">${s.title}</div>
-      </div>
-      <div class="detail-step-body">${s.body}</div>
-    </div>`).join('');
-  document.getElementById('detailModal').classList.add('show');
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show')
 }
-function closeDetail(){document.getElementById('detailModal').classList.remove('show')}
 
-// ── Export ────────────────────────────────────────────────────────────────────
-function showExport(){document.getElementById('exportModal').classList.add('show')}
-function closeExport(){document.getElementById('exportModal').classList.remove('show')}
+// ──────────────────────────────────────────────
+// EXPORT
+// ──────────────────────────────────────────────
+function doExport(mode) {
+  closeModal('exportModal')
 
-function exportCSV(){
-  const opt=document.querySelector('input[name="exp"]:checked').value;
-  let items=allItems;
-  if(opt==='ok_nodata')items=allItems.filter(i=>i.status==='ok'||i.status==='nodata'||i.status==='loading');
-  if(opt==='ok')items=allItems.filter(i=>i.status==='ok');
-  if(opt==='okwarn')items=allItems.filter(i=>i.status!=='bad');
+  let items = allItems
+  if (mode === 'participar') items = allItems.filter(i => i.status === 'participar')
+  else if (mode === 'participar_semdado') items = allItems.filter(i => i.status === 'participar' || i.status === 'sem_dado' || i.status === 'analisando')
+  else if (mode === 'participar_verificar') items = allItems.filter(i => i.status !== 'evitar')
 
-  // Gerar codigo_licitei a partir da UASG + número do pregão
-  const uasg=organInfo.uasg||'000000';
-  const pregaoNum=(organInfo.pregao||'0001/2026').replace('PE ','').replace('/','');
+  if (items.length === 0) { alert('Nenhum item nesta seleção.'); return }
 
-  const header='"Item","Descrição","Qtd.","Valor Ref.","Marca/Fabricante","Modelo/Versão","Valor Mínimo","Valor Inicial","codigo_licitei","grupo"';
-  const rows=items.map((i,idx)=>{
-    const codigo=`${uasg}${pregaoNum.substring(0,8)}_${i.item}`;
-    return[
-      i.item,
-      `"${i.desc.replace(/"/g,'""')}"`,
-      i.qtd,
-      `"R$ ${i.valorTR.toFixed(2).replace('.',',')}"`,
-      `"${(i.marca||'Conforme edital').replace(/"/g,'""')}"`,
-      '"C/EDITAL"',
-      (i.valorTR*0.90).toFixed(2),
-      i.valorTR.toFixed(2),
-      `"${codigo}"`,
-      '""'
-    ].join(',');
-  });
+  // Formato CSV do Licitei
+  const header = 'codigo_licitei;numero_item;descricao_item;quantidade;unidade_fornecimento;marca_fabricante;modelo_versao;valor_minimo;valor_inicial'
+  const rows = items.map(item => {
+    const codBase = orgInfo.uasg || '000000'
+    const codigo = `${codBase}00001${new Date().getFullYear()}0001_${item.num}`
+    const valMin = (item.valor * 0.9).toFixed(2).replace('.', ',')
+    const valIni = item.valor.toFixed(2).replace('.', ',')
+    const desc = item.descricao.replace(/;/g, ',').substring(0, 150)
+    const marca = (item.marca || 'Marca Nacional Conforme Edital').replace(/;/g, ',')
+    const modelo = (item.modelo || 'C/EDITAL').replace(/;/g, ',')
+    return `${codigo};${item.num};${desc};${item.qtd};${item.unidade || 'UN'};${marca};${modelo};${valMin};${valIni}`
+  })
 
-  const csv='\uFEFF'+header+'\n'+rows.join('\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=`proposta_licitei_${organInfo.pregao?.replace(/\//g,'-')||'pregao'}_${items.length}_itens.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  closeExport();
+  const csv = '\uFEFF' + header + '\n' + rows.join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `licitai_proposta_${orgInfo.pregao?.replace('/', '-') || 'export'}_${items.length}itens.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
+
+// ──────────────────────────────────────────────
+// RESET
+// ──────────────────────────────────────────────
+function resetApp() {
+  allItems = []; orgInfo = {}; currentFilter = 'all'; analysisComplete = false
+  dz.style.display = 'block'
+  document.getElementById('progressWrap').classList.remove('show')
+  document.getElementById('infoGrid').style.display = 'none'
+  document.getElementById('toolbar').style.display = 'none'
+  document.getElementById('statsBar').style.display = 'none'
+  document.getElementById('tableArea').style.display = 'none'
+  document.getElementById('emptyState').style.display = 'none'
+  document.getElementById('fileInput').value = ''
+  document.getElementById('tableBody').innerHTML = ''
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'))
+  document.querySelector('.pill.all').classList.add('active')
+}
+
+// Fechar modal clicando fora
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show') })
+})
 </script>
 </body>
 </html>
