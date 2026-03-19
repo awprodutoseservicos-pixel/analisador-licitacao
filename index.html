@@ -248,12 +248,12 @@ async function processPDF(file) {
   try {
     extracted = await extractWithClaude(base64)
   } catch (e) {
-    alert('Erro ao extrair itens: ' + e.message)
+    alert('Erro: ' + e.message)
     resetApp(); return
   }
 
-  if (!extracted || extracted.items.length === 0) {
-    alert('Não foi possível identificar itens no PDF.')
+  if (!extracted || !extracted.items || extracted.items.length === 0) {
+    alert('Sem itens. Resposta: ' + JSON.stringify(extracted).substring(0, 300))
     resetApp(); return
   }
 
@@ -319,8 +319,8 @@ IMPORTANTE: Extraia TODOS os itens, incluindo cotas reservadas para ME/EPP. Reto
   })
 
   if (!response.ok) {
-    const err = await response.json()
-    throw new Error(err.error?.message || 'Erro na API')
+    const txt = await response.text()
+    throw new Error('HTTP ' + response.status + ': ' + txt.substring(0, 200))
   }
 
   const data = await response.json()
