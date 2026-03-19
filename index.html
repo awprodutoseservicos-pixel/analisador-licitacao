@@ -324,9 +324,21 @@ IMPORTANTE: Extraia TODOS os itens, incluindo cotas reservadas para ME/EPP. Reto
   }
 
   const data = await response.json()
-  const text = data.content.map(c => c.text || '').join('')
-  const clean = text.replace(/```json|```/g, '').trim()
-  return JSON.parse(clean)
+
+  // Se o Worker retornou erro
+  if (data.error) throw new Error(data.error)
+
+  // Worker já retorna o JSON parseado com orgInfo e items
+  if (data.items && Array.isArray(data.items)) return data
+
+  // Fallback: tenta extrair de data.content (resposta bruta da API)
+  if (data.content && Array.isArray(data.content)) {
+    const text = data.content.map(c => c.text || '').join('')
+    const clean = text.replace(/```json|```/g, '').trim()
+    return JSON.parse(clean)
+  }
+
+  throw new Error('Resposta inválida do servidor: ' + JSON.stringify(data).substring(0, 200))
 }
 
 // ── ANÁLISE DE MERCADO ──
