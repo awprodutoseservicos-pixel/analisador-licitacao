@@ -160,11 +160,24 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <!-- PAGE: ANALISAR -->
 <div class="page active" id="page-analisar">
 
-  <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()" style="margin-top:24px">
-    <div style="font-size:40px;margin-bottom:12px;opacity:.6">📄</div>
-    <div style="font-size:17px;font-weight:700;margin-bottom:8px">Arraste o Termo de Referência (PDF)</div>
-    <div style="color:var(--muted);font-size:13px">ou clique para selecionar · <b style="color:var(--accent)">Qualquer órgão · Qualquer produto</b></div>
-    <input type="file" id="fileInput" accept=".pdf">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px" id="dropGrid">
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <div style="font-size:36px;margin-bottom:10px;opacity:.6">📄</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">1. Termo de Referência (PDF)</div>
+      <div style="color:var(--muted);font-size:12px">Arraste ou clique · <b style="color:var(--accent)">Obrigatório</b></div>
+      <input type="file" id="fileInput" accept=".pdf">
+      <div id="pdfStatus" style="margin-top:10px;font-size:12px;color:var(--accent);display:none">✅ PDF carregado</div>
+    </div>
+    <div class="dropzone" id="dropzoneCSV" onclick="document.getElementById('csvInput').click()">
+      <div style="font-size:36px;margin-bottom:10px;opacity:.6">📊</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">2. Modelo do Licitei (CSV)</div>
+      <div style="color:var(--muted);font-size:12px">Baixe em <b style="color:var(--accent)">Modelos → Baixar modelo</b></div>
+      <input type="file" id="csvInput" accept=".csv">
+      <div id="csvStatus" style="margin-top:10px;font-size:12px;color:var(--accent);display:none">✅ CSV carregado</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:16px;display:none" id="btnAnalisar">
+    <button class="btn btn-primary" style="padding:12px 32px;font-size:15px" onclick="startAnalysis()">🚀 Analisar e Gerar Proposta</button>
   </div>
 
   <div class="progress-wrap" id="progressWrap">
@@ -288,6 +301,7 @@ const STORAGE_KEY = 'licitai_historico'
 
 // ── STATE ──
 let allItems = [], currentFilter = 'all', orgInfo = {}
+let modeloCSV = null, pdfBase64 = null
 
 // ── NAVEGAÇÃO ──
 function showPage(id, btn) {
@@ -305,11 +319,50 @@ dz.addEventListener('dragleave', () => dz.classList.remove('drag'))
 dz.addEventListener('drop', e => {
   e.preventDefault(); dz.classList.remove('drag')
   const f = e.dataTransfer.files[0]
-  if (f?.type === 'application/pdf') processPDF(f)
+  if (f) loadPDF(f)
 })
 document.getElementById('fileInput').addEventListener('change', e => {
-  if (e.target.files[0]) processPDF(e.target.files[0])
+  if (e.target.files[0]) loadPDF(e.target.files[0])
 })
+const dzCSV = document.getElementById('dropzoneCSV')
+dzCSV.addEventListener('dragover', e => { e.preventDefault(); dzCSV.classList.add('drag') })
+dzCSV.addEventListener('dragleave', () => dzCSV.classList.remove('drag'))
+dzCSV.addEventListener('drop', e => {
+  e.preventDefault(); dzCSV.classList.remove('drag')
+  const f = e.dataTransfer.files[0]
+  if (f) loadCSV(f)
+})
+document.getElementById('csvInput').addEventListener('change', e => {
+  if (e.target.files[0]) loadCSV(e.target.files[0])
+})
+async function loadPDF(file) {
+  pdfBase64 = await fileToBase64(file)
+  const el = document.getElementById('pdfStatus')
+  el.style.display = 'block'; el.textContent = '✅ ' + file.name
+  checkReady()
+}
+async function loadCSV(file) {
+  modeloCSV = await file.text()
+  const el = document.getElementById('csvStatus')
+  el.style.display = 'block'; el.textContent = '✅ ' + file.name
+  checkReady()
+}
+function checkReady() {
+  const btn = document.getElementById('btnAnalisar')
+  if (!pdfBase64) return
+  btn.style.display = 'block'
+  if (modeloCSV) {
+    btn.innerHTML = '<button class="btn btn-primary" style="padding:12px 32px;font-size:15px" onclick="startAnalysis()">🚀 Analisar e Gerar Proposta</button>'
+  } else {
+    btn.innerHTML = '<button class="btn btn-primary" style="padding:12px 32px;font-size:15px" onclick="startAnalysis()">🚀 Analisar TR</button><div style="font-size:11px;color:var(--warn);margin-top:8px">⚠️ Sem CSV — exportação básica</div>'
+  }
+}
+function startAnalysis() {
+  if (!pdfBase64) { alert('Carregue o PDF!'); return }
+  document.getElementById('dropGrid').style.display = 'none'
+  document.getElementById('btnAnalisar').style.display = 'none'
+  processPDF()
+}
 
 // ── PROGRESS ──
 function prog(pct, msg, detail = '') {
@@ -321,11 +374,10 @@ function prog(pct, msg, detail = '') {
 }
 
 // ── MAIN ──
-async function processPDF(file) {
-  prog(5, 'Carregando PDF...', file.name)
-  dz.style.display = 'none'
-  const base64 = await fileToBase64(file)
-  prog(15, 'Extraindo itens com IA (Claude Sonnet)...')
+async function processPDF() {
+  prog(5, 'Carregando PDF...')
+  prog(15, 'Extraindo itens com IA...')
+  const base64 = pdfBase64
   let extracted
   try {
     extracted = await extractWithClaude(base64)
@@ -673,6 +725,15 @@ function showExportModal() { document.getElementById('exportModal').classList.ad
 function closeModal(id) { document.getElementById(id).classList.remove('show') }
 
 // ── EXPORT ──
+function parseCSVLine(line) {
+  const result = []; let current = '', inQ = false
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') { inQ = !inQ }
+    else if (line[i] === ',' && !inQ) { result.push(current); current = '' }
+    else { current += line[i] }
+  }
+  result.push(current); return result
+}
 function doExport(mode) {
   closeModal('exportModal')
   let items = allItems
@@ -680,28 +741,58 @@ function doExport(mode) {
   else if (mode === 'participar_semdado') items = allItems.filter(i => i.status === 'participar' || i.status === 'sem_dado' || i.status === 'analisando')
   else if (mode === 'participar_verificar') items = allItems.filter(i => i.status !== 'evitar')
   if (!items.length) { alert('Nenhum item.'); return }
-  const header = 'codigo_licitei;numero_item;descricao_item;quantidade;unidade_fornecimento;marca_fabricante;modelo_versao;valor_minimo;valor_inicial'
-  const rows = items.map(it => {
-    const cod = `${orgInfo.uasg||'000000'}00001${new Date().getFullYear()}0001_${it.num}`
-    return [cod, it.num, (it.descricao||'').replace(/;/g,',').substring(0,150),
-      it.qtd||1, it.unidade||'UN',
-      (it.marca||'Marca Nacional').replace(/;/g,','),
-      'C/EDITAL',
-      fmt((it.valor||0)*0.9),
-      fmt(it.valor||0)
-    ].join(';')
-  })
-  const csv = '\uFEFF' + header + '\n' + rows.join('\n')
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}))
-  a.download = `licitai_${orgInfo.pregao?.replace('/','_')||'export'}_${items.length}itens.csv`
-  a.click()
+  const selectedNums = new Set(items.map(i => i.num))
+  const idx = {}; items.forEach(i => { idx[i.num] = i })
+  if (modeloCSV) {
+    // Formato nativo Licitei usando modelo CSV
+    const lines = modeloCSV.split('\n')
+    const outLines = [lines[0]]
+    for (const line of lines.slice(1)) {
+      if (!line.trim()) continue
+      const cols = parseCSVLine(line)
+      if (cols.length < 9) continue
+      const num = parseInt(cols[0])
+      if (!isNaN(num) && selectedNums.has(num) && idx[num]) {
+        const it = idx[num]
+        cols[4] = it.marca || 'Marca Nacional Conforme Edital'
+        cols[5] = 'C/EDITAL'
+        cols[6] = ((it.valor||0)*0.9).toFixed(2)
+        cols[7] = (it.valor||0).toFixed(2)
+      }
+      outLines.push(cols.map(c => `"${c}"`).join(','))
+    }
+    const csv = '\uFEFF' + outLines.join('\n')
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}))
+    a.download = `proposta_licitei_${orgInfo.pregao?.replace('/','_')||'export'}.csv`
+    a.click()
+  } else {
+    // Formato simples sem modelo
+    const header = 'codigo_licitei;numero_item;descricao_item;quantidade;unidade_fornecimento;marca_fabricante;modelo_versao;valor_minimo;valor_inicial'
+    const rows = items.map(it => {
+      const cod = (orgInfo.uasg||'000000')+'00001'+new Date().getFullYear()+'0001_'+it.num
+      return [cod,it.num,(it.descricao||'').replace(/;/g,',').substring(0,150),
+        it.qtd||1,it.unidade||'UN',(it.marca||'Marca Nacional').replace(/;/g,','),
+        'C/EDITAL',((it.valor||0)*0.9).toFixed(2).replace('.',','),
+        (it.valor||0).toFixed(2).replace('.',',')].join(';')
+    })
+    const csv = '\uFEFF' + header + '\n' + rows.join('\n')
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}))
+    a.download = `licitai_${orgInfo.pregao?.replace('/','_')||'export'}_${items.length}itens.csv`
+    a.click()
+  }
 }
 
 // ── RESET ──
 function resetApp() {
-  allItems = []; orgInfo = {}; currentFilter = 'all'
-  dz.style.display = 'block'
+  allItems = []; orgInfo = {}; currentFilter = 'all'; modeloCSV = null; pdfBase64 = null
+  document.getElementById('dropGrid').style.display = 'grid'
+  document.getElementById('btnAnalisar').style.display = 'none'
+  document.getElementById('pdfStatus').style.display = 'none'
+  document.getElementById('csvStatus').style.display = 'none'
+  document.getElementById('csvInput').value = ''
+  const dz = document.getElementById('dropzone'); dz.style.display = 'block'
   document.getElementById('progressWrap').classList.remove('show')
   document.getElementById('infoGrid').style.display = 'none'
   document.getElementById('rentPanel').style.display = 'none'
