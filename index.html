@@ -424,7 +424,21 @@ async function extractWithClaude(base64PDF) {
   })
   const data = await resp.json()
   if (data.error) throw new Error(data.error)
-  if (data.items) return data
+  // Formato normal
+  if (data.items && Array.isArray(data.items)) return data
+  // Formato compacto {"o":...,"i":[...]}
+  if (data.i && Array.isArray(data.i)) {
+    return {
+      orgInfo: {
+        uasg: data.o?.u || '', orgao: data.o?.n || '',
+        uf: data.o?.f || '', cidade: data.o?.c || '', pregao: data.o?.p || ''
+      },
+      items: data.i.map(x => ({
+        num: x.n, descricao: x.d, catmat: x.c,
+        unidade: x.u, qtd: x.q, valor: x.v
+      }))
+    }
+  }
   throw new Error('Resposta inválida: ' + JSON.stringify(data).substring(0, 200))
 }
 
