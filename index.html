@@ -748,6 +748,30 @@ function parseCSVLine(line) {
   }
   result.push(current); return result
 }
+
+function cleanField(v) {
+  // Remove \xa0 (espaço não-quebrável), R$, espaços extras
+  return (v || '').replace(/\u00a0/g, ' ').replace(/R\$\s*/g, '').trim()
+}
+
+function fmtValor(v) {
+  // Garante número com ponto decimal sem ponto de milhar
+  // Ex: 1.218,99 → 1218.99 | 308,33 → 308.33 | 825.00 → 825.00
+  let s = String(v).replace(/\u00a0/g, '').replace(/\s/g, '')
+  // Remove R$
+  s = s.replace(/R\$/g, '')
+  // Formato 1.234,56 → 1234.56
+  if (/^\d{1,3}(\.\d{3})+,\d{2}$/.test(s)) {
+    s = s.replace(/\./g, '').replace(',', '.')
+  }
+  // Formato 1234,56 → 1234.56
+  else if (/^\d+,\d{1,2}$/.test(s)) {
+    s = s.replace(',', '.')
+  }
+  const n = parseFloat(s)
+  return isNaN(n) ? '0.00' : n.toFixed(2)
+}
+
 function doExport(mode) {
   closeModal('exportModal')
   let items = allItems
@@ -755,12 +779,17 @@ function doExport(mode) {
   else if (mode === 'participar_semdado') items = allItems.filter(i => i.status === 'participar' || i.status === 'sem_dado' || i.status === 'analisando')
   else if (mode === 'participar_verificar') items = allItems.filter(i => i.status !== 'evitar')
   if (!items.length) { alert('Nenhum item.'); return }
+
   const selectedNums = new Set(items.map(i => i.num))
   const idx = {}; items.forEach(i => { idx[i.num] = i })
+
   if (modeloCSV) {
-    // Formato nativo Licitei usando modelo CSV
-    const lines = modeloCSV.split('\n')
-    const outLines = [lines[0]]
+    // Formato nativo Licitei — usa modelo CSV como base
+    // Limpa o modeloCSV de \xa0 e \n dentro de células antes de processar
+    const cleanCSV = modeloCSV.replace(/\u00a0/g, ' ')
+    const lines = cleanCSV.split('\n')
+    const outLines = [lines[0].replace(/\u00a0/g, ' ')]
+
     for (const line of lines.slice(1)) {
       if (!line.trim()) continue
       const cols = parseCSVLine(line)
@@ -770,30 +799,43 @@ function doExport(mode) {
         const it = idx[num]
         cols[4] = it.marca || 'Marca Nacional Conforme Edital'
         cols[5] = 'C/EDITAL'
-        cols[6] = ((it.valor||0)*0.9).toFixed(2)
-        cols[7] = (it.valor||0).toFixed(2)
+        cols[6] = fmtValor((it.valor || 0) * 0.9)
+        cols[7] = fmtValor(it.valor || 0)
       }
-      outLines.push(cols.map(c => `"${c}"`).join(','))
+      // Limpa campo grupo (índice 9) — remove \n e espaços
+      if (cols.length > 9) cols[9] = ''
+      // Limpa todos os campos de \xa0
+      const cleanCols = cols.map(c => cleanField(c))
+      outLines.push(cleanCols.map(c => `"${c.replace(/"/g, '""')}"`).join(','))
     }
+
     const csv = '\uFEFF' + outLines.join('\n')
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}))
-    a.download = `proposta_licitei_${orgInfo.pregao?.replace('/','_')||'export'}.csv`
+    a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8;'}))
+    a.download = `proposta_licitei_${(orgInfo.pregao || 'export').replace('/', '_')}.csv`
     a.click()
+
   } else {
-    // Formato simples sem modelo
+    // Formato simples sem modelo CSV
     const header = 'codigo_licitei;numero_item;descricao_item;quantidade;unidade_fornecimento;marca_fabricante;modelo_versao;valor_minimo;valor_inicial'
     const rows = items.map(it => {
-      const cod = (orgInfo.uasg||'000000')+'00001'+new Date().getFullYear()+'0001_'+it.num
-      return [cod,it.num,(it.descricao||'').replace(/;/g,',').substring(0,150),
-        it.qtd||1,it.unidade||'UN',(it.marca||'Marca Nacional').replace(/;/g,','),
-        'C/EDITAL',((it.valor||0)*0.9).toFixed(2).replace('.',','),
-        (it.valor||0).toFixed(2).replace('.',',')].join(';')
+      const cod = (orgInfo.uasg || '000000') + '00001' + new Date().getFullYear() + '0001_' + it.num
+      return [
+        cod,
+        it.num,
+        (it.descricao || '').replace(/;/g, ',').replace(/\u00a0/g, ' ').substring(0, 150),
+        it.qtd || 1,
+        it.unidade || 'UN',
+        (it.marca || 'Marca Nacional Conforme Edital').replace(/;/g, ','),
+        'C/EDITAL',
+        fmtValor((it.valor || 0) * 0.9).replace('.', ','),
+        fmtValor(it.valor || 0).replace('.', ',')
+      ].join(';')
     })
     const csv = '\uFEFF' + header + '\n' + rows.join('\n')
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8;'}))
-    a.download = `licitai_${orgInfo.pregao?.replace('/','_')||'export'}_${items.length}itens.csv`
+    a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8;'}))
+    a.download = `licitai_${(orgInfo.pregao || 'export').replace('/', '_')}_${items.length}itens.csv`
     a.click()
   }
 }
