@@ -795,16 +795,15 @@ function doExport(mode) {
       const cols = parseCSVLine(line)
       if (cols.length < 9) continue
       const num = parseInt(cols[0])
-      if (!isNaN(num) && selectedNums.has(num) && idx[num]) {
-        const it = idx[num]
-        cols[4] = it.marca || 'Marca Nacional Conforme Edital'
-        cols[5] = 'C/EDITAL'
-        cols[6] = fmtValor((it.valor || 0) * 0.9)
-        cols[7] = fmtValor(it.valor || 0)
-      }
-      // Limpa campo grupo (índice 9) — remove \n e espaços
+      if (isNaN(num)) continue
+      // SOMENTE exporta itens selecionados — ignora os demais
+      if (!selectedNums.has(num) || !idx[num]) continue
+      const it = idx[num]
+      cols[4] = it.marca || 'Marca Nacional Conforme Edital'
+      cols[5] = 'C/EDITAL'
+      cols[6] = fmtValor((it.valor || 0) * 0.9)
+      cols[7] = fmtValor(it.valor || 0)
       if (cols.length > 9) cols[9] = ''
-      // Limpa todos os campos de \xa0
       const cleanCols = cols.map(c => cleanField(c))
       outLines.push(cleanCols.map(c => `"${c.replace(/"/g, '""')}"`).join(','))
     }
