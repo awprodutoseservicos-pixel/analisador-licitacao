@@ -376,11 +376,64 @@ function prog(pct, msg, detail = '') {
 // ── MAIN ──
 async function processPDF() {
   prog(5, 'Carregando PDF...')
+  prog(10, 'Verificando tamanho do PDF...')
+
+  // Verifica número de páginas — API aceita no máximo 100
+  let base64 = pdfBase64
+  let base64_p2 = null
+
+  try {
+    // Carrega PDF.js só para contar páginas
+    if (typeof pdfjsLib === 'undefined') {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script')
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
+        s.onload = res; s.onerror = rej
+        document.head.appendChild(s)
+      })
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+    }
+
+    const buf = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0)).buffer
+    const pdf = await pdfjsLib.getDocument({ data: buf }).promise
+    const totalPages = pdf.numPages
+
+    if (totalPages > 100) {
+      prog(12, `PDF com ${totalPages} páginas — dividindo em partes...`)
+
+      // Divide: parte 1 = páginas 1-90, parte 2 = páginas 91-fim
+      const splitPDF = async (startPage, endPage) => {
+        const { PDFDocument } = await import('https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.esm.min.js')
+        const srcDoc = await PDFDocument.load(buf)
+        const newDoc = await PDFDocument.create()
+        const end = Math.min(endPage, totalPages)
+        const pages = await newDoc.copyPages(srcDoc, Array.from({length: end - startPage + 1}, (_, i) => startPage - 1 + i))
+        pages.forEach(p => newDoc.addPage(p))
+        const bytes = await newDoc.save()
+        return btoa(String.fromCharCode(...bytes))
+      }
+
+      try {
+        base64 = await splitPDF(1, 90)
+        if (totalPages > 90) {
+          base64_p2 = await splitPDF(91, Math.min(180, totalPages))
+        }
+        prog(15, `PDF dividido — parte 1 (90 págs) pronta`)
+      } catch(splitErr) {
+        // Se falhar o split, tenta com o PDF completo mas pode dar erro
+        prog(15, 'Extraindo itens com IA...')
+      }
+    }
+  } catch(e) {
+    // Se não conseguir verificar páginas, segue normalmente
+  }
+
   prog(15, 'Extraindo itens com IA...')
-  const base64 = pdfBase64
+  const base64Final = base64
   let extracted
   try {
-    extracted = await extractWithClaude(base64)
+    extracted = await extractWithClaude(base64Final, base64_p2)
   } catch(e) {
     alert('Erro: ' + e.message); resetApp(); return
   }
@@ -416,11 +469,13 @@ async function fileToBase64(file) {
   })
 }
 
-async function extractWithClaude(base64PDF) {
+async function extractWithClaude(base64PDF, base64_p2 = null) {
+  const body = { base64: base64PDF }
+  if (base64_p2) body.base64_p2 = base64_p2
   const resp = await fetch(WORKER + '/extract', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ base64: base64PDF })
+    body: JSON.stringify(body)
   })
   const data = await resp.json()
   if (data.error) throw new Error(data.error)
